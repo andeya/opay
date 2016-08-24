@@ -1,6 +1,6 @@
 # Opay  [![GoDoc](https://godoc.org/github.com/tsuna/gohbase?status.png)](https://godoc.org/github.com/henrylee2cn/opay)
 
-Opay 提供一套简单的在线支付系统。
+Opay 以订单为主线、面向接口开发的在线支付通用模块。
 
 # 特点
 
