@@ -115,6 +115,8 @@ func HandleFunc(typ string, handler func(Context) error) {
 	Handle(typ, HandlerFunc(handler))
 }
 
+var ErrTimeout = errors.New("Add to queue timeout.")
+
 // 处理超时的订单
 func dealTimeout(iOrd IOrder) (time.Duration, error) {
 	deadline, ok := iOrd.Deadline()

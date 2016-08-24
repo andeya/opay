@@ -1,7 +1,6 @@
 package opay
 
 import (
-	"errors"
 	"log"
 	"runtime"
 	"sync"
@@ -53,8 +52,6 @@ func (oc *OrderChan) SetCap(queueCapacity int) {
 
 	log.Println("Successfully set the queue capacity.")
 }
-
-var ErrTimeout = errors.New("Add to queue timeout.")
 
 // 推送一条订单
 func (oc *OrderChan) Push(iOrd IOrder) error {
