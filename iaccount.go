@@ -11,14 +11,13 @@ type (
 	// 账户操作接口
 	Accounter interface {
 		// 获取账户余额
-		// @aid 资产ID
 		// @uid 用户ID
+		// @tx 数据库事务操作实例
 		GetBalance(uid string, tx *sqlx.Tx) (float64, error)
 
 		// 修改账户余额
-		// @aid 资产ID
 		// @amount 正加负减
-		// @tx 当在一个事务中时，作为数据库的操作句柄
+		// @tx 数据库事务操作实例
 		UpdateBalance(uid string, amount float64, tx *sqlx.Tx) error
 	}
 
@@ -37,6 +36,7 @@ var globalAccList = &AccList{
 }
 
 // 注册账户操作接口
+// @aid 资产ID
 func (al *AccList) Account(aid string, accounter Accounter) error {
 	al.mu.Lock()
 	defer al.mu.Unlock()
@@ -49,11 +49,13 @@ func (al *AccList) Account(aid string, accounter Accounter) error {
 }
 
 // 注册账户操作接口
+// @aid 资产ID
 func Account(aid string, acc Accounter) error {
 	return globalAccList.Account(aid, acc)
 }
 
 // 获取账户操作接口
+// @aid 资产ID
 func (al *AccList) GetAccounter(aid string) (Accounter, error) {
 	al.mu.RLock()
 	acc, ok := al.m[aid]
