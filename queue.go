@@ -11,12 +11,12 @@ type (
 	// 订单队列
 	Queue interface {
 		SetCap(int)
-		Push(IOrder) error
-		pull() IOrder
+		Push(Request) (done <-chan struct{}, err error)
+		pull() Request
 	}
 
 	OrderChan struct {
-		c  chan IOrder
+		c  chan Request
 		mu sync.RWMutex
 	}
 )
@@ -30,7 +30,7 @@ func newOrderChan(queueCapacity int) Queue {
 		queueCapacity = DEFAULT_QUEUE_LEN
 	}
 	return &OrderChan{
-		c: make(chan IOrder, queueCapacity),
+		c: make(chan Request, queueCapacity),
 	}
 }
 
@@ -47,53 +47,60 @@ func (oc *OrderChan) SetCap(queueCapacity int) {
 		}
 	}
 	oc.mu.Lock()
-	oc.c = make(chan IOrder, queueCapacity)
+	oc.c = make(chan Request, queueCapacity)
 	oc.mu.Unlock()
 
 	log.Println("Successfully set the queue capacity.")
 }
 
 // 推送一条订单
-func (oc *OrderChan) Push(iOrd IOrder) error {
+func (oc *OrderChan) Push(req Request) (done <-chan struct{}, err error) {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
-	timeout, err := dealTimeout(iOrd)
+	c := make(chan struct{})
+	req.done = (chan<- struct{})(c)
+	done = (<-chan struct{})(c)
 
-	// 已超时，取消处理
+	timeout, err := checkTimeout(req.Deadline)
+
 	if err != nil {
-		return err
+		// 已超时，取消处理
+		req.writeback(err)
+		return
 	}
 
-	// 未超时
 	if timeout > 0 {
+		// 未超时
 		select {
-		case oc.c <- iOrd:
-			return nil
+		case oc.c <- req:
 		case <-time.After(timeout):
-			iOrd.Writeback(ErrTimeout)
-			return ErrTimeout
+			err = ErrTimeout
+			req.writeback(err)
 		}
+
+	} else {
+		// 无超时限制
+		oc.c <- req
 	}
 
-	// 无超时限制
-	oc.c <- iOrd
-	return nil
+	return
 }
 
 // 读出一条订单
 // 无限等待，直到取出一个有效订单
 // 超时订单，自动处理
-func (oc *OrderChan) pull() IOrder {
-	var iOrd IOrder
+func (oc *OrderChan) pull() Request {
+	var req Request
 	for {
 		oc.mu.RLock()
-		iOrd = <-oc.c
-		if iOrd != nil {
+		req = <-oc.c
+		if req != emptyRequest {
 			oc.mu.RUnlock()
 
 			// 超时取消对订单的处理
-			if _, err := dealTimeout(iOrd); err != nil {
+			if _, err := checkTimeout(req.Deadline); err != nil {
+				req.writeback(err)
 				continue
 			}
 
@@ -105,5 +112,5 @@ func (oc *OrderChan) pull() IOrder {
 		runtime.Gosched()
 	}
 
-	return iOrd
+	return req
 }
