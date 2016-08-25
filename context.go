@@ -9,8 +9,8 @@ import (
 type (
 	// 上下文
 	Context struct {
-		Account     Accounter //账户操作接口实例
-		WithAccount Accounter //相对应的账户操作接口实例
+		account     Accounter //账户操作接口实例
+		withAccount Accounter //相对应的账户操作接口实例
 		Request               //请求
 	}
 
@@ -38,6 +38,12 @@ type (
 		// 获取相对应的资产ID（如用于资产间兑换业务）
 		GetWithAid() string
 
+		// 获取针对 Uid-Aid 账户的变化量，正负表示收支。
+		GetAmount() float64
+
+		// 获取针对 Uid-WithAid 账户的变化量，正负表示收支。
+		GetWithAidAmount() float64
+
 		// 新建订单，并标记为等待处理状态
 		ToPend(tx *sqlx.Tx) error
 
@@ -53,7 +59,7 @@ type (
 		// 标记订单为失败状态
 		ToFail(tx *sqlx.Tx) error
 
-		//回写错误
+		// 回写错误
 		SetErr(err error)
 	}
 
@@ -74,6 +80,46 @@ func (ctx *Context) Action() Action {
 // 获取处理超时，不填则不限时
 func (ctx *Context) Deadline() time.Time {
 	return ctx.Request.Deadline
+}
+
+// 新建订单，并标记为等待处理状态
+func (ctx *Context) ToPend() error {
+	return ctx.Request.IOrder.ToPend(ctx.Request.Tx)
+}
+
+// 标记订单为正在处理状态，或有相关异步回调操作
+func (ctx *Context) ToDo() error {
+	return ctx.Request.IOrder.ToDo(ctx.Request.Tx)
+}
+
+// 处理账户并标记订单为成功状态
+func (ctx *Context) ToSucceed() error {
+	return ctx.Request.IOrder.ToSucceed(ctx.Request.Tx)
+}
+
+// 标记订单为撤销状态
+func (ctx *Context) ToCancel() error {
+	return ctx.Request.IOrder.ToCancel(ctx.Request.Tx)
+}
+
+// 标记订单为失败状态
+func (ctx *Context) ToFail() error {
+	return ctx.Request.IOrder.ToFail(ctx.Request.Tx)
+}
+
+// 针对 Uid-Aid 账户，修改账户余额。
+func (ctx *Context) UpdateBalance() error {
+	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetAmount(), ctx.Request.Tx)
+}
+
+// 针对 WithUid-Aid 账户，修改账户余额。
+func (ctx *Context) UpdateWithUidBalance() error {
+	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetWithUid(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx)
+}
+
+// 针对 Uid-WithAid 账户，修改账户余额。
+func (ctx *Context) UpdateWithAidBalance() error {
+	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetWithAidAmount(), ctx.Request.Tx)
 }
 
 // 五种订单处理行为

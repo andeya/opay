@@ -17,6 +17,8 @@ type (
 	HandlerFunc func(*Context) error
 )
 
+var _ Handler = HandlerFunc(nil)
+
 func (hf HandlerFunc) ServeOpay(ctx *Context) error {
 	return hf(ctx)
 }

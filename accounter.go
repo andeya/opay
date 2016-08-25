@@ -10,25 +10,29 @@ import (
 type (
 	// 账户操作接口
 	Accounter interface {
-		// 获取账户余额
-		// @uid 用户ID
-		// @tx 数据库事务操作实例
-		GetBalance(uid string, tx *sqlx.Tx) (float64, error)
-
 		// 修改账户余额
 		// @amount 正加负减
 		// @tx 数据库事务操作实例
 		UpdateBalance(uid string, amount float64, tx *sqlx.Tx) error
 	}
 
-	AccList struct {
-		mu sync.RWMutex
-		m  map[string]Accounter
-	}
+	// 账户操作接口函数
+	AccounterFunc func(uid string, amount float64, tx *sqlx.Tx) error
 )
 
+var _ Accounter = AccounterFunc(nil)
+
+func (af AccounterFunc) UpdateBalance(uid string, amount float64, tx *sqlx.Tx) error {
+	return af(uid, amount, tx)
+}
+
 // 账户操作接口列表
-// 默认注册空资产账户空操作接口
+type AccList struct {
+	mu sync.RWMutex
+	m  map[string]Accounter
+}
+
+// 全局账户操作接口列表，默认注册空资产账户空操作接口。
 var globalAccList = &AccList{
 	m: map[string]Accounter{
 		"": new(emptyAccounter),

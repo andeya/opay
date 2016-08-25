@@ -5,28 +5,28 @@ import (
 )
 
 /*
- * 充值
+ * 提现
  */
-type Recharge struct {
+type Withdraw struct {
 	Background
 }
 
 // 编译期检查接口实现
-var _ Handler = (*Recharge)(nil)
+var _ Handler = (*Withdraw)(nil)
 
 // 执行入口
-func (r *Recharge) ServeOpay(ctx *opay.Context) error {
-	return r.Call(r, ctx)
+func (w *Withdraw) ServeOpay(ctx *opay.Context) error {
+	return w.Call(w, ctx)
 }
 
 // 处理账户并标记订单为成功状态
-func (r *Recharge) ToSucceed() error {
+func (w *Withdraw) ToSucceed() error {
 	// 操作账户
-	err := r.UpdateBalance()
+	err := w.UpdateBalance()
 	if err != nil {
 		return err
 	}
 
 	// 更新订单
-	return r.ToSucceed()
+	return w.ToSucceed()
 }
