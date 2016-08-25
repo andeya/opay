@@ -17,7 +17,7 @@ type (
 	// 请求
 	Request struct {
 		Key      string          //指定处理类型
-		Action   string          //指定订单处理行为
+		Action   Action          //指定订单处理行为
 		Deadline time.Time       //处理超时，不填则不限时
 		IOrder                   //订单接口实例
 		*sqlx.Tx                 //可选，数据库事务操作
@@ -26,16 +26,16 @@ type (
 
 	// 订单接口
 	IOrder interface {
-		//获取用户ID
+		// 获取用户ID
 		GetUid() string
 
-		//获取相对应的用户ID
+		// 获取相对应的用户ID
 		GetWithUid() string
 
-		//获取资产ID
+		// 获取资产ID
 		GetAid() string
 
-		//获取相对应的资产ID（如用于资产间兑换业务）
+		// 获取相对应的资产ID（如用于资产间兑换业务）
 		GetWithAid() string
 
 		// 新建订单，并标记为等待处理状态
@@ -60,6 +60,21 @@ type (
 	// 订单处理行为
 	Action int
 )
+
+// 获取指定处理类型
+func (ctx *Context) Key() string {
+	return ctx.Request.Key
+}
+
+// 获取指定订单处理行为
+func (ctx *Context) Action() Action {
+	return ctx.Request.Action
+}
+
+// 获取处理超时，不填则不限时
+func (ctx *Context) Deadline() time.Time {
+	return ctx.Request.Deadline
+}
 
 // 五种订单处理行为
 const (
