@@ -8,10 +8,9 @@ import (
 	"github.com/henrylee2cn/opay"
 )
 
-/**
+/*
  * 操作的基础结构体
  */
-
 type BaseHandle struct {
 	*opay.Context
 }

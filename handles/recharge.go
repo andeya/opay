@@ -4,7 +4,7 @@ import (
 	"github.com/henrylee2cn/opay"
 )
 
-/**
+/*
  * 充值
  */
 type Recharge struct {
