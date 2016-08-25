@@ -112,14 +112,29 @@ func (ctx *Context) UpdateBalance() error {
 	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetAmount(), ctx.Request.Tx)
 }
 
+// 针对 Uid-Aid 账户，回滚账户余额。
+func (ctx *Context) RollbackBalance() error {
+	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx)
+}
+
 // 针对 WithUid-Aid 账户，修改账户余额。
 func (ctx *Context) UpdateWithUidBalance() error {
 	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetWithUid(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx)
 }
 
+// 针对 WithUid-Aid 账户，回滚账户余额。
+func (ctx *Context) RollbackWithUidBalance() error {
+	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetWithUid(), ctx.Request.IOrder.GetAmount(), ctx.Request.Tx)
+}
+
 // 针对 Uid-WithAid 账户，修改账户余额。
 func (ctx *Context) UpdateWithAidBalance() error {
 	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetWithAidAmount(), ctx.Request.Tx)
+}
+
+// 针对 Uid-WithAid 账户，回滚账户余额。
+func (ctx *Context) RollbackWithAidBalance() error {
+	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), -ctx.Request.IOrder.GetWithAidAmount(), ctx.Request.Tx)
 }
 
 // 五种订单处理行为

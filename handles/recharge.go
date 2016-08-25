@@ -22,11 +22,11 @@ func (r *Recharge) ServeOpay(ctx *opay.Context) error {
 // 处理账户并标记订单为成功状态
 func (r *Recharge) ToSucceed() error {
 	// 操作账户
-	err := r.UpdateBalance()
+	err := r.Background.Context.UpdateBalance()
 	if err != nil {
 		return err
 	}
 
 	// 更新订单
-	return r.ToSucceed()
+	return r.Background.Context.ToSucceed()
 }

@@ -22,16 +22,16 @@ func (e *Exchange) ServeOpay(ctx *opay.Context) error {
 // 处理账户并标记订单为成功状态
 func (e *Exchange) ToSucceed() error {
 	// 操作账户
-	err := e.UpdateBalance()
+	err := e.Background.Context.UpdateBalance()
 	if err != nil {
 		return err
 	}
 
-	err = e.UpdateWithAidBalance()
+	err = e.Background.Context.UpdateWithAidBalance()
 	if err != nil {
 		return err
 	}
 
 	// 更新订单
-	return e.ToSucceed()
+	return e.Background.Context.ToSucceed()
 }

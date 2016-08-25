@@ -23,16 +23,16 @@ func (t *Transfer) ServeOpay(ctx *opay.Context) error {
 // IOrder.ToSucceed()中应包含WithUid的订单创建与标记成功
 func (t *Transfer) ToSucceed() error {
 	// 操作账户
-	err := t.UpdateBalance()
+	err := t.Background.Context.UpdateBalance()
 	if err != nil {
 		return err
 	}
 
-	err = t.UpdateWithUidBalance()
+	err = t.Background.Context.UpdateWithUidBalance()
 	if err != nil {
 		return err
 	}
 
 	// 更新订单
-	return t.ToSucceed()
+	return t.Background.Context.ToSucceed()
 }
