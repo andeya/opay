@@ -11,6 +11,9 @@ type Recharge struct {
 	BaseHandle
 }
 
+// 编译期检查接口实现
+var _ opay.Handler = (*Recharge)(nil)
+
 // 执行入口
 func (r *Recharge) ServeOpay(ctx *opay.Context) error {
 	r.SetContext(ctx)
