@@ -2,6 +2,8 @@
 
 Opay 以订单为主线、面向接口开发的在线支付通用模块。
 
+![image](https://github.com/henrylee2cn/opay/raw/master/doc/uml.png)
+
 # 特点
 
 - 完全面向接口开发
