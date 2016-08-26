@@ -22,12 +22,12 @@ type (
 )
 
 const (
-	DEFAULT_QUEUE_LEN = 1024
+	DEFAULT_QUEUE_CAP = 1024 //队列默认容量
 )
 
 func newOrderChan(queueCapacity int) Queue {
 	if queueCapacity <= 0 {
-		queueCapacity = DEFAULT_QUEUE_LEN
+		queueCapacity = DEFAULT_QUEUE_CAP
 	}
 	return &OrderChan{
 		c: make(chan Request, queueCapacity),
@@ -37,7 +37,7 @@ func newOrderChan(queueCapacity int) Queue {
 // 设置队列容量
 func (oc *OrderChan) SetCap(queueCapacity int) {
 	if queueCapacity <= 0 {
-		queueCapacity = DEFAULT_QUEUE_LEN
+		queueCapacity = DEFAULT_QUEUE_CAP
 	}
 	close(oc.c)
 	if len(oc.c) > 0 {
