@@ -12,7 +12,7 @@ type (
 	Queue interface {
 		SetCap(int)
 		Push(Request) (done <-chan struct{}, err error)
-		pull() Request
+		Pull() Request
 	}
 
 	OrderChan struct {
@@ -90,7 +90,7 @@ func (oc *OrderChan) Push(req Request) (done <-chan struct{}, err error) {
 // 读出一条订单
 // 无限等待，直到取出一个有效订单
 // 超时订单，自动处理
-func (oc *OrderChan) pull() Request {
+func (oc *OrderChan) Pull() Request {
 	var req Request
 	for {
 		oc.mu.RLock()

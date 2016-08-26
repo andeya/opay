@@ -11,7 +11,7 @@ type (
 	Engine struct {
 		*AccList           //账户操作接口列表
 		*ServeMux          //订单操作接口全局路由
-		Queue              //订单队列接口
+		queue     Queue    //订单队列接口
 		db        *sqlx.DB //全局数据库操作对象
 	}
 )
@@ -21,7 +21,7 @@ func NewOpay(db *sqlx.DB, queueCapacity int) *Engine {
 	return &Engine{
 		AccList:  globalAccList,
 		ServeMux: globalServeMux,
-		Queue:    newOrderChan(queueCapacity),
+		queue:    newOrderChan(queueCapacity),
 		db:       db,
 	}
 }
@@ -34,7 +34,7 @@ func (engine *Engine) Serve() {
 	for {
 		// 读出一条请求
 		// 无限等待
-		req := engine.Queue.pull()
+		req := engine.queue.Pull()
 
 		var err error
 
@@ -98,4 +98,9 @@ func (engine *Engine) Serve() {
 			})
 		}()
 	}
+}
+
+// 推送请求到引擎进行处理
+func (engine *Engine) Push(req Request) (done <-chan struct{}, err error) {
+	return engine.queue.Push(req)
 }
