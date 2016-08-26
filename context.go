@@ -28,7 +28,7 @@ type (
 
 	// 订单接口
 	IOrder interface {
-		// 获取订单当前状态，默认为UNSET==0
+		// 获取订单当前行为值，初始值应为UNSET==0
 		CurAction() Action
 
 		// 获取用户ID
