@@ -59,6 +59,9 @@ type (
 		// 标记订单为失败状态
 		ToFail(tx *sqlx.Tx) error
 
+		// 读取处理错误
+		Err() error
+
 		// 回写错误
 		SetErr(err error)
 	}
