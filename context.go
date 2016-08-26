@@ -28,8 +28,8 @@ type (
 
 	// 订单接口
 	IOrder interface {
-		// 获取订单当前行为值，初始值应为UNSET==0
-		CurAction() Action
+		// 获取订单上一次行为，初始值应为UNSET==0
+		LastAction() Action
 
 		// 获取用户ID
 		GetUid() string
@@ -193,7 +193,7 @@ func (req *Request) ValidateAction() error {
 	}
 
 	// 检查是否为重复处理
-	if req.IOrder.CurAction() == req.Action {
+	if req.IOrder.LastAction() == req.Action {
 		return ErrReprocess
 	}
 	return nil
