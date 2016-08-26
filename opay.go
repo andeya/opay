@@ -36,11 +36,18 @@ func (engine *Engine) Serve() {
 		// 无限等待
 		req := engine.Queue.pull()
 
+		var err error
+
+		// 检查处理行为Action是否合法
+		if err = req.ValidateAction(); err != nil {
+			req.writeback(err)
+			continue
+		}
+
 		// 获取账户操作接口
 		var (
 			accounter     Accounter
 			withAccounter Accounter
-			err           error
 		)
 
 		accounter, err = engine.GetAccounter(req.IOrder.GetAid())

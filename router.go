@@ -55,8 +55,8 @@ func (mux *ServeMux) Handle(key string, handler Handler) error {
 }
 
 // 注册订单处理接口
-func (mux *ServeMux) HandleFunc(key string, handler func(*Context) error) error {
-	return mux.Handle(key, HandlerFunc(handler))
+func (mux *ServeMux) HandleFunc(key string, fn func(*Context) error) error {
+	return mux.Handle(key, HandlerFunc(fn))
 }
 
 // 通过路由执行订单处理

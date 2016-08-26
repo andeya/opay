@@ -13,17 +13,17 @@ type (
 		// 修改账户余额
 		// @amount 正加负减
 		// @tx 数据库事务操作实例
-		UpdateBalance(uid string, amount float64, tx *sqlx.Tx) error
+		UpdateBalance(uid string, amount float64, tx *sqlx.Tx, addition interface{}) error
 	}
 
 	// 账户操作接口函数
-	AccounterFunc func(uid string, amount float64, tx *sqlx.Tx) error
+	AccounterFunc func(uid string, amount float64, tx *sqlx.Tx, addition interface{}) error
 )
 
 var _ Accounter = AccounterFunc(nil)
 
-func (af AccounterFunc) UpdateBalance(uid string, amount float64, tx *sqlx.Tx) error {
-	return af(uid, amount, tx)
+func (af AccounterFunc) UpdateBalance(uid string, amount float64, tx *sqlx.Tx, addition interface{}) error {
+	return af(uid, amount, tx, addition)
 }
 
 // 账户操作接口列表
@@ -54,8 +54,26 @@ func (al *AccList) Account(aid string, accounter Accounter) error {
 
 // 注册账户操作接口
 // @aid 资产ID
+func (al *AccList) AccountFunc(
+	aid string,
+	fn func(uid string, amount float64, tx *sqlx.Tx, addition interface{}) error,
+) error {
+	return al.Account(aid, AccounterFunc(fn))
+}
+
+// 注册账户操作接口
+// @aid 资产ID
 func Account(aid string, acc Accounter) error {
 	return globalAccList.Account(aid, acc)
+}
+
+// 注册账户操作接口
+// @aid 资产ID
+func AccountFunc(
+	aid string,
+	fn func(uid string, amount float64, tx *sqlx.Tx, addition interface{}) error,
+) error {
+	return globalAccList.AccountFunc(aid, fn)
 }
 
 // 获取账户操作接口
@@ -73,10 +91,10 @@ func (al *AccList) GetAccounter(aid string) (Accounter, error) {
 // 账户空操作接口
 type emptyAccounter int
 
-func (*emptyAccounter) GetBalance(uid string, tx *sqlx.Tx) (float64, error) {
+func (*emptyAccounter) GetBalance(uid string, tx *sqlx.Tx, addition interface{}) (float64, error) {
 	return 0, nil
 }
 
-func (*emptyAccounter) UpdateBalance(uid string, amount float64, tx *sqlx.Tx) error {
+func (*emptyAccounter) UpdateBalance(uid string, amount float64, tx *sqlx.Tx, addition interface{}) error {
 	return nil
 }

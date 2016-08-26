@@ -29,6 +29,9 @@ type (
 
 		// 标记订单为失败状态
 		ToFail() error
+
+		// 同步处理订单，并标记为成功状态
+		SyncDeal() error
 	}
 
 	// 实现基本操作接口
@@ -53,6 +56,13 @@ func (b *Background) Call(handler Handler, ctx *opay.Context) error {
 		return handler.ToDo()
 	case opay.SUCCEED:
 		return handler.ToSucceed()
+	case opay.SYNC_DEAL:
+		return handler.SyncDeal()
 	}
+	return ErrAction
+}
+
+// 处理账户并标记订单为成功状态
+func (b *Background) SyncDeal() error {
 	return ErrAction
 }
