@@ -36,3 +36,20 @@ func (t *Transfer) ToSucceed() error {
 	// 更新订单
 	return t.Background.Context.ToSucceed()
 }
+
+// 实时转账
+func (t *Transfer) SyncDeal() error {
+	// 操作账户
+	err := t.Background.Context.UpdateBalance()
+	if err != nil {
+		return err
+	}
+
+	err = t.Background.Context.UpdateWithUidBalance()
+	if err != nil {
+		return err
+	}
+
+	// 更新订单
+	return t.Background.Context.ToSucceed()
+}

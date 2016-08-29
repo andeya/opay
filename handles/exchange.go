@@ -35,3 +35,19 @@ func (e *Exchange) ToSucceed() error {
 	// 更新订单
 	return e.Background.Context.ToSucceed()
 }
+
+// 实时兑换
+func (e *Exchange) SyncDeal() error {
+	// 操作账户
+	err := e.Background.Context.UpdateBalance()
+	if err != nil {
+		return err
+	}
+
+	err = e.Background.Context.UpdateWithAidBalance()
+	if err != nil {
+		return err
+	}
+
+	return e.Background.Context.SyncDeal()
+}

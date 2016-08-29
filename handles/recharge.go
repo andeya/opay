@@ -30,3 +30,15 @@ func (r *Recharge) ToSucceed() error {
 	// 更新订单
 	return r.Background.Context.ToSucceed()
 }
+
+// 实时充值
+func (r *Recharge) SyncDeal() error {
+	// 操作账户
+	err := r.Background.Context.UpdateBalance()
+	if err != nil {
+		return err
+	}
+
+	// 更新订单
+	return r.Background.Context.SyncDeal()
+}
