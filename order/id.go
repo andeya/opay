@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+var timeZone = time.UTC
+
+func SetTimeZone(name string, hourOffset int) {
+	timeZone = time.FixedZone("CST", hourOffset*60*60)
+}
+
 var orderid = &struct {
 	salt int32
 	lock sync.Mutex
@@ -18,7 +24,7 @@ var orderid = &struct {
 // 建议：全部产品使用同一个进程生成ID
 func CreateOrderid(typ uint8) string {
 	orderid.lock.Lock()
-	t := time.Now()
+	t := time.Now().In(timeZone)
 	if orderid.salt >= 1000000 {
 		orderid.salt = rand.Int31n(1000000)
 	} else {
