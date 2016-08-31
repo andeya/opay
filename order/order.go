@@ -51,21 +51,16 @@ type (
 
 var _ opay.IOrder = new(BaseOrder)
 
-// 新建订单
-func NewOrder(
-	uid string,
-	typ uint8,
+// Prepare some mandatory fields.
+func (this *BaseOrder) Prepare(
 	status int32,
-	summary string,
 	notes string,
 	ip string,
+	tableName string,
+
 ) *BaseOrder {
-	return (&BaseOrder{
-		Uid:     uid,
-		Type:    typ,
-		Status:  status,
-		Summary: summary,
-	}).appendDetail(status, notes, ip)
+	this.tableName = tableName
+	return this.appendDetail(status, notes, ip)
 }
 
 // Get the most recent Action, the default value is UNSET==0.
