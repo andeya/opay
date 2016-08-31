@@ -8,79 +8,73 @@ import (
 )
 
 type (
-	// 上下文
 	Context struct {
-		account     Accounter //账户操作接口实例
-		withAccount Accounter //相对应的账户操作接口实例
-		Request               //请求
+		account     Accounter //instance of Account Interface
+		withAccount Accounter //the second party's instance of Account Interface
+		Request
 	}
 
-	// 请求
 	Request struct {
-		Key      string          //指定处理类型
-		Action   Action          //指定订单处理行为
-		Deadline time.Time       //处理超时，不填则不限时
-		IOrder                   //订单接口实例
-		Addition interface{}     //附加参数
-		*sqlx.Tx                 //可选，数据库事务操作
-		done     chan<- struct{} //处理结束的信号
+		Key      string          //the specified handler
+		Action   Action          //the specified handler's action
+		Deadline time.Time       //handle timeouts, if do not fill, no limit
+		IOrder                   //instance of Order Interface
+		Addition interface{}     //addition params
+		*sqlx.Tx                 //the optional, database transaction
+		done     chan<- struct{} //end signal
 	}
 
-	// 订单接口
+	// Operation interface of order.
 	IOrder interface {
-		// 获取订单上一次行为，初始值应为UNSET==0
+		// Get the most recent Action, the default value is UNSET==0.
 		LastAction() Action
 
-		// 获取用户ID
+		// Get user's id.
 		GetUid() string
 
-		// 获取相对应的用户ID
-		GetWithUid() string
+		// Get the second party's user id.
+		GetUid2() string
 
-		// 获取资产ID
+		// Get asset id.
 		GetAid() string
 
-		// 获取相对应的资产ID（如用于资产间兑换业务）
-		GetWithAid() string
+		// Get the second party's asset id. (for example, the currency exchange business)
+		GetAid2() string
 
-		// 获取针对 Uid-Aid 账户的变化量，正负表示收支。
+		// Get the amount of change for the Uid-Aid account,
+		// balance of positive and negative representation.
 		GetAmount() float64
 
-		// 获取针对 Uid-WithAid 账户的变化量，正负表示收支。
-		GetWithAidAmount() float64
+		// Get the amount of change for the Uid-Aid2 account,
+		// balance of positive and negative representation.
+		GetAmount2() float64
 
-		// 异步处理类方法
-
-		// 新建订单，并标记为等待处理状态
+		// Async execution, and mark pending.
 		ToPend(tx *sqlx.Tx, addition interface{}) error
 
-		// 标记订单为正在处理状态，或有相关异步回调操作
+		// Async execution, and mark the doing.
 		ToDo(tx *sqlx.Tx, addition interface{}) error
 
-		// 处理账户并标记订单为成功状态
+		// Async execution, and mark the successful.
 		ToSucceed(tx *sqlx.Tx, addition interface{}) error
 
-		// 标记订单为撤销状态
+		// Async execution, and mark canceled.
 		ToCancel(tx *sqlx.Tx, addition interface{}) error
 
-		// 标记订单为失败状态
+		// Async execution, and mark failure.
 		ToFail(tx *sqlx.Tx, addition interface{}) error
 
-		// 同步处理方法
-
-		// 同步处理至成功
+		// Sync execution, and mark the successful.
 		SyncDeal(tx *sqlx.Tx, addition interface{}) error
 
-		// 处理结果
-
-		// 读取处理错误
+		// Get error message.
 		Err() error
 
-		// 回写错误
+		// Writeback error message.
 		SetErr(err error)
 	}
 
-	// 订单处理行为
+	// handling order's action
 	Action int
 )
 
@@ -139,24 +133,24 @@ func (ctx *Context) RollbackBalance() error {
 	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.Addition)
 }
 
-// 针对 WithUid-Aid 账户，修改账户余额。
-func (ctx *Context) UpdateWithUidBalance() error {
-	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetWithUid(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.Addition)
+// 针对 Uid2-Aid 账户，修改账户余额。
+func (ctx *Context) UpdateUid2Balance() error {
+	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid2(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.Addition)
 }
 
-// 针对 WithUid-Aid 账户，回滚账户余额。
-func (ctx *Context) RollbackWithUidBalance() error {
-	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetWithUid(), ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.Addition)
+// 针对 Uid2-Aid 账户，回滚账户余额。
+func (ctx *Context) RollbackUid2Balance() error {
+	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid2(), ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.Addition)
 }
 
-// 针对 Uid-WithAid 账户，修改账户余额。
-func (ctx *Context) UpdateWithAidBalance() error {
-	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetWithAidAmount(), ctx.Request.Tx, ctx.Request.Addition)
+// 针对 Uid-Aid2 账户，修改账户余额。
+func (ctx *Context) UpdateAid2Balance() error {
+	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetAmount2(), ctx.Request.Tx, ctx.Request.Addition)
 }
 
-// 针对 Uid-WithAid 账户，回滚账户余额。
-func (ctx *Context) RollbackWithAidBalance() error {
-	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), -ctx.Request.IOrder.GetWithAidAmount(), ctx.Request.Tx, ctx.Request.Addition)
+// 针对 Uid-Aid2 账户，回滚账户余额。
+func (ctx *Context) RollbackAid2Balance() error {
+	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), -ctx.Request.IOrder.GetAmount2(), ctx.Request.Tx, ctx.Request.Addition)
 }
 
 // 六种订单处理行为状态

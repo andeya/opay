@@ -57,7 +57,7 @@ func (engine *Engine) Serve() {
 			continue
 		}
 
-		withAccounter, err = engine.GetAccounter(req.IOrder.GetWithAid())
+		withAccounter, err = engine.GetAccounter(req.IOrder.GetAid2())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
 			req.writeback(err)

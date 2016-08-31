@@ -20,7 +20,7 @@ func (t *Transfer) ServeOpay(ctx *opay.Context) error {
 }
 
 // 处理账户并标记订单为成功状态，
-// IOrder.ToSucceed()中应包含WithUid的订单创建与标记成功
+// IOrder.ToSucceed()中应包含Uid2的订单创建与标记成功
 func (t *Transfer) ToSucceed() error {
 	// 操作账户
 	err := t.Background.Context.UpdateBalance()
@@ -28,7 +28,7 @@ func (t *Transfer) ToSucceed() error {
 		return err
 	}
 
-	err = t.Background.Context.UpdateWithUidBalance()
+	err = t.Background.Context.UpdateUid2Balance()
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (t *Transfer) SyncDeal() error {
 		return err
 	}
 
-	err = t.Background.Context.UpdateWithUidBalance()
+	err = t.Background.Context.UpdateUid2Balance()
 	if err != nil {
 		return err
 	}

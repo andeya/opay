@@ -27,7 +27,7 @@ func (e *Exchange) ToSucceed() error {
 		return err
 	}
 
-	err = e.Background.Context.UpdateWithAidBalance()
+	err = e.Background.Context.UpdateAid2Balance()
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (e *Exchange) SyncDeal() error {
 		return err
 	}
 
-	err = e.Background.Context.UpdateWithAidBalance()
+	err = e.Background.Context.UpdateAid2Balance()
 	if err != nil {
 		return err
 	}
