@@ -10,7 +10,7 @@ import (
 var timeZone = time.UTC
 
 func SetTimeZone(name string, hourOffset int) {
-	timeZone = time.FixedZone("CST", hourOffset*60*60)
+	timeZone = time.FixedZone(name, hourOffset*60*60)
 }
 
 var orderid = &struct {
