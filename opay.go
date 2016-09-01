@@ -40,7 +40,8 @@ func (engine *Engine) Serve() {
 
 		// 检查处理行为Action是否合法
 		if err = req.ValidateAction(); err != nil {
-			req.writeback(err)
+			req.setError(err)
+			req.writeback()
 			continue
 		}
 
@@ -53,14 +54,16 @@ func (engine *Engine) Serve() {
 		accounter, err = engine.GetAccounter(req.IOrder.GetAid())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
-			req.writeback(err)
+			req.setError(err)
+			req.writeback()
 			continue
 		}
 
 		withAccounter, err = engine.GetAccounter(req.IOrder.GetAid2())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
-			req.writeback(err)
+			req.setError(err)
+			req.writeback()
 			continue
 		}
 
@@ -74,7 +77,8 @@ func (engine *Engine) Serve() {
 				}
 
 				// 关闭请求，标记请求处理结束
-				req.writeback(err)
+				req.setError(err)
+				req.writeback()
 			}()
 
 			if req.Tx == nil {

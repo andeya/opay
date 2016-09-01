@@ -63,7 +63,8 @@ func (oc *OrderChan) Push(req Request) (respChan <-chan Response, err error) {
 
 	if err != nil {
 		// 已超时，取消处理
-		req.writeback(err)
+		req.setError(err)
+		req.writeback()
 		return
 	}
 
@@ -73,7 +74,8 @@ func (oc *OrderChan) Push(req Request) (respChan <-chan Response, err error) {
 		case oc.c <- req:
 		case <-time.After(timeout):
 			err = ErrTimeout
-			req.writeback(err)
+			req.setError(err)
+			req.writeback()
 		}
 
 	} else {
@@ -102,7 +104,8 @@ func (oc *OrderChan) Pull() Request {
 
 		// If timeout, cancel the order.
 		if _, err := checkTimeout(req.Deadline); err != nil {
-			req.writeback(err)
+			req.setError(err)
+			req.writeback()
 			continue
 		}
 		break
