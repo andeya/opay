@@ -5,8 +5,8 @@ import (
 )
 
 type Context struct {
-	account     Accounter //instance of Account Interface
-	withAccount Accounter //the second party's instance of Account Interface
+	account     IAccount //instance of Account Interface
+	withAccount IAccount //the second party's instance of Account Interface
 	Request
 }
 

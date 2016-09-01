@@ -47,11 +47,11 @@ func (engine *Engine) Serve() {
 
 		// 获取账户操作接口
 		var (
-			accounter     Accounter
-			withAccounter Accounter
+			iAccount     IAccount
+			withIAccount IAccount
 		)
 
-		accounter, err = engine.GetAccounter(req.IOrder.GetAid())
+		iAccount, err = engine.GetIAccount(req.IOrder.GetAid())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
 			req.setError(err)
@@ -59,7 +59,7 @@ func (engine *Engine) Serve() {
 			continue
 		}
 
-		withAccounter, err = engine.GetAccounter(req.IOrder.GetAid2())
+		withIAccount, err = engine.GetIAccount(req.IOrder.GetAid2())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
 			req.setError(err)
@@ -96,8 +96,8 @@ func (engine *Engine) Serve() {
 			}
 
 			err = engine.ServeMux.serve(&Context{
-				account:     accounter,
-				withAccount: withAccounter,
+				account:     iAccount,
+				withAccount: withIAccount,
 				Request:     req,
 			})
 		}()
