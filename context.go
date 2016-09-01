@@ -89,8 +89,3 @@ func (ctx *Context) RollbackAid2Balance() error {
 func (ctx *Context) Write(k string, v interface{}) {
 	ctx.Request.write(k, v)
 }
-
-// Set response error.
-func (ctx *Context) SetError(err error) {
-	ctx.Request.setError(err)
-}
