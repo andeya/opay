@@ -91,10 +91,6 @@ func (al *AccList) GetIAccount(aid string) (IAccount, error) {
 // 账户空操作接口
 type emptyIAccount int
 
-func (*emptyIAccount) GetBalance(uid string, tx *sqlx.Tx, values Values) (float64, error) {
-	return 0, nil
-}
-
 func (*emptyIAccount) UpdateBalance(uid string, amount float64, tx *sqlx.Tx, values Values) error {
 	return nil
 }
