@@ -35,11 +35,13 @@ type (
 		Status    int32     `json:"status"`
 		CreatedAt int64     `json:"created_at"`
 
+		//the most recent status
+		lastStatus int32
+
 		//processing error
 		err error
-		//database table name
-		tableName string
-		lock      sync.RWMutex
+
+		lock sync.RWMutex
 	}
 	Detail struct {
 		UpdatedAt int64  `json:"updated_at"`
@@ -51,21 +53,32 @@ type (
 
 var _ opay.IOrder = new(BaseOrder)
 
-// Prepare some mandatory fields.
-func (this *BaseOrder) Prepare(
-	status int32,
-	notes string,
-	ip string,
-	tableName string,
+// Append order detail.
+func (this *BaseOrder) AppendDetail(status int32, notes string, ip string) *BaseOrder {
+	this.lastStatus = this.Status
+	this.Status = status
+	if len(notes) == 0 {
+		notes = this.GetStatusText()
+	}
+	this.Details = append(this.Details, &Detail{
+		UpdatedAt: time.Now().Unix(),
+		Status:    status,
+		Notes:     notes,
+		Ip:        ip,
+	})
+	return this
+}
 
-) *BaseOrder {
-	this.tableName = tableName
-	return this.appendDetail(status, notes, ip)
+// Roolback order detail.
+func (this *BaseOrder) RoolbackDetail(status int32, notes string, ip string) *BaseOrder {
+	this.Status = this.lastStatus
+	this.Details = this.Details[:len(this.Details)-1]
+	return this
 }
 
 // Get the most recent Action, the default value is UNSET==0.
 func (this *BaseOrder) LastAction() opay.Action {
-	return opay.Action(this.Status)
+	return opay.Action(this.lastStatus)
 }
 
 // Get user's id.
@@ -179,20 +192,5 @@ func (this *BaseOrder) Bind(other *BaseOrder) {
 // set order id, 32bytes(time23+type3+random6)
 func (this *BaseOrder) setId() *BaseOrder {
 	this.Id = CreateOrderid(this.Type)
-	return this
-}
-
-// append order detail.
-func (this *BaseOrder) appendDetail(status int32, notes string, ip string) *BaseOrder {
-	this.Status = status
-	if len(notes) == 0 {
-		notes = this.GetStatusText()
-	}
-	this.Details = append(this.Details, &Detail{
-		UpdatedAt: time.Now().Unix(),
-		Status:    status,
-		Notes:     notes,
-		Ip:        ip,
-	})
 	return this
 }
