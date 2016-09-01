@@ -1,4 +1,4 @@
-package order
+package base
 
 import (
 	"errors"
@@ -102,32 +102,32 @@ func (this *BaseOrder) GetAmount2() float64 {
 
 // Async execution, and mark pending.
 func (this *BaseOrder) ToPend(tx *sqlx.Tx, values opay.Values) error {
-	return errors.New("This method 'ToPend' is not yet implemented.")
+	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToPend method).")
 }
 
 // Async execution, and mark the doing.
 func (this *BaseOrder) ToDo(tx *sqlx.Tx, values opay.Values) error {
-	return errors.New("This method 'ToDo' is not yet implemented.")
+	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToDo method).")
 }
 
 // Async execution, and mark the successful.
 func (this *BaseOrder) ToSucceed(tx *sqlx.Tx, values opay.Values) error {
-	return errors.New("This method 'ToSucceed' is not yet implemented.")
+	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToSucceed method).")
 }
 
 // Async execution, and mark canceled.
 func (this *BaseOrder) ToCancel(tx *sqlx.Tx, values opay.Values) error {
-	return errors.New("This method 'ToCancel' is not yet implemented.")
+	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToCancel method).")
 }
 
 // Async execution, and mark failure.
 func (this *BaseOrder) ToFail(tx *sqlx.Tx, values opay.Values) error {
-	return errors.New("This method 'ToFail' is not yet implemented.")
+	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToFail method).")
 }
 
 // Sync execution, and mark the successful.
 func (this *BaseOrder) SyncDeal(tx *sqlx.Tx, values opay.Values) error {
-	return errors.New("This method 'SyncDeal' is not yet implemented.")
+	return errors.New("*BaseOrder does not implement opay.IOrder (missing SyncDeal method).")
 }
 
 // Get the order's id.
