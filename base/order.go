@@ -53,8 +53,8 @@ type (
 
 var _ opay.IOrder = new(BaseOrder)
 
-// Append order detail.
-func (this *BaseOrder) AppendDetail(status int32, notes string, ip string) *BaseOrder {
+// prepare order status before push opay.
+func (this *BaseOrder) PrepareStatus(status int32, notes string, ip string) *BaseOrder {
 	this.lastStatus = this.Status
 	this.Status = status
 	if len(notes) == 0 {
@@ -69,8 +69,8 @@ func (this *BaseOrder) AppendDetail(status int32, notes string, ip string) *Base
 	return this
 }
 
-// Roolback order detail.
-func (this *BaseOrder) RoolbackDetail(status int32, notes string, ip string) *BaseOrder {
+// Rollback order status after dealing failure.
+func (this *BaseOrder) RollbackStatus(status int32, notes string, ip string) *BaseOrder {
 	this.Status = this.lastStatus
 	this.Details = this.Details[:len(this.Details)-1]
 	return this
