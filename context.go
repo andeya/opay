@@ -2,6 +2,7 @@ package opay
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -15,13 +16,21 @@ type (
 	}
 
 	Request struct {
-		Key      string          //the specified handler
-		Action   Action          //the specified handler's action
-		Deadline time.Time       //handle timeouts, if do not fill, no limit
-		IOrder                   //instance of Order Interface
-		Addition interface{}     //addition params
+		Key      string      //the specified handler
+		Action   Action      //the specified handler's action
+		Deadline time.Time   //handle timeouts, if do not fill, no limit
+		IOrder               //instance of Order Interface
+		Addition interface{} //addition params
+		response Response
+		respChan chan<- Response //result signal
 		*sqlx.Tx                 //the optional, database transaction
-		done     chan<- struct{} //end signal
+		done     bool
+	}
+
+	// The result of dealing request.
+	Response struct {
+		Body map[string]interface{}
+		Err  error
 	}
 
 	// Operation interface of order.
@@ -66,12 +75,6 @@ type (
 
 		// Sync execution, and mark the successful.
 		SyncDeal(tx *sqlx.Tx, addition interface{}) error
-
-		// Get error message.
-		Err() error
-
-		// Writeback error message.
-		SetErr(err error)
 	}
 
 	// handling order's action
@@ -193,11 +196,32 @@ func (req *Request) ValidateAction() error {
 	return nil
 }
 
-// 标记请求处理结束，并回写错误
-func (req *Request) writeback(err error) {
-	close(req.done)
-	req.IOrder.SetErr(err)
+// Prepare the request.
+func (req *Request) prepare() (respChan <-chan Response) {
+	req.done = false
+	req.response.Body = make(map[string]interface{})
+	c := make(chan Response)
+	req.respChan = (chan<- Response)(c)
+	return (<-chan Response)(c)
 }
 
-// 空请求
-var emptyRequest Request
+// Write response body.
+func (req *Request) Write(key string, value interface{}) {
+	if req.done {
+		log.Println("As it has been submitted, it can not be written.")
+		return
+	}
+	req.response.Body[key] = value
+}
+
+// Complete the dealing of the request.
+func (req *Request) writeback(err error) {
+	if req.done {
+		log.Println("repeated writeback.")
+		return
+	}
+	req.response.Err = err
+	req.respChan <- req.response
+	req.done = true
+	close(req.respChan)
+}

@@ -11,7 +11,7 @@ type (
 	// 订单队列
 	Queue interface {
 		SetCap(int)
-		Push(Request) (done <-chan struct{}, err error)
+		Push(Request) (respChan <-chan Response, err error)
 		Pull() Request
 	}
 
@@ -54,14 +54,11 @@ func (oc *OrderChan) SetCap(queueCapacity int) {
 }
 
 // 推送一条订单
-func (oc *OrderChan) Push(req Request) (done <-chan struct{}, err error) {
+func (oc *OrderChan) Push(req Request) (respChan <-chan Response, err error) {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
-	c := make(chan struct{})
-	req.done = (chan<- struct{})(c)
-	done = (<-chan struct{})(c)
-
+	respChan = req.prepare()
 	timeout, err := checkTimeout(req.Deadline)
 
 	if err != nil {
@@ -91,25 +88,24 @@ func (oc *OrderChan) Push(req Request) (done <-chan struct{}, err error) {
 // 无限等待，直到取出一个有效订单
 // 超时订单，自动处理
 func (oc *OrderChan) Pull() Request {
-	var req Request
+	var (
+		req Request
+		c   chan Request
+	)
+
 	for {
 		oc.mu.RLock()
-		req = <-oc.c
-		if req != emptyRequest {
-			oc.mu.RUnlock()
-
-			// 超时取消对订单的处理
-			if _, err := checkTimeout(req.Deadline); err != nil {
-				req.writeback(err)
-				continue
-			}
-
-			// 取得有效订单，返回
-			break
-		}
-
+		c = oc.c
 		oc.mu.RUnlock()
-		runtime.Gosched()
+
+		req = <-c
+
+		// If timeout, cancel the order.
+		if _, err := checkTimeout(req.Deadline); err != nil {
+			req.writeback(err)
+			continue
+		}
+		break
 	}
 
 	return req

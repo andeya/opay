@@ -130,20 +130,6 @@ func (this *BaseOrder) SyncDeal(tx *sqlx.Tx, addition interface{}) error {
 	return errors.New("This method 'SyncDeal' is not yet implemented.")
 }
 
-// Get error message.
-func (this *BaseOrder) Err() error {
-	this.lock.RLock()
-	defer this.lock.RUnlock()
-	return this.err
-}
-
-// Writeback error message.
-func (this *BaseOrder) SetErr(err error) {
-	this.lock.Lock()
-	this.err = err
-	this.lock.Unlock()
-}
-
 // Get the order's id.
 func (this *BaseOrder) GetId() string {
 	return this.Id
