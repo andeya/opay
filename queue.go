@@ -101,6 +101,9 @@ func (oc *OrderChan) Pull() Request {
 		oc.mu.RUnlock()
 
 		req = <-c
+		if req.isNil() {
+			continue
+		}
 
 		// If timeout, cancel the order.
 		if _, err := checkTimeout(req.Deadline); err != nil {

@@ -75,3 +75,7 @@ func (req *Request) writeback() {
 	req.done = true
 	close(req.respChan)
 }
+
+func (req *Request) isNil() bool {
+	return req.response == nil
+}
