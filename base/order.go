@@ -55,24 +55,30 @@ type (
 
 var _ opay.IOrder = new(BaseOrder)
 
-// prepare order status before push opay.
+// Prepare order status before push opay.
 func (this *BaseOrder) PrepareStatus(status int32, notes string, ip string) *BaseOrder {
 	this.lastStatus = this.Status
 	this.Status = status
+
+	return this
+}
+
+// Add order detail after prepared status.
+func (this *BaseOrder) AddDetail(notes string, ip string) *BaseOrder {
 	if len(notes) == 0 {
 		notes = this.GetStatusText()
 	}
 	this.Details = append(this.Details, &Detail{
 		UpdatedAt: time.Now().Unix(),
-		Status:    status,
+		Status:    this.Status,
 		Notes:     notes,
 		Ip:        ip,
 	})
 	return this
 }
 
-// Rollback order status after dealing failure.
-func (this *BaseOrder) RollbackStatus(status int32, notes string, ip string) *BaseOrder {
+// Rollback order status and detail in memory after dealing failure.
+func (this *BaseOrder) Rollback() *BaseOrder {
 	this.Status = this.lastStatus
 	this.Details = this.Details[:len(this.Details)-1]
 	this.detailsBytes = nil
