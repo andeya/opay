@@ -88,6 +88,18 @@ func (this *BaseOrder) SetNote(note string) *BaseOrder {
 	return this
 }
 
+// Get details of the bytes format.
+func (this *BaseOrder) DetailsBytes() []byte {
+	if this.detailsBytes == nil {
+		if this.Details == nil {
+			this.Details = []*Detail{}
+		}
+		this.detailsBytes, _ = json.Marshal(this.Details)
+	}
+
+	return this.detailsBytes
+}
+
 // Rollback order status and detail in memory after dealing failure.
 func (this *BaseOrder) Rollback() *BaseOrder {
 	count := len(this.Details)
@@ -97,18 +109,6 @@ func (this *BaseOrder) Rollback() *BaseOrder {
 	this.detailsBytes = nil
 	this.Status = this.lastStatus
 	return this
-}
-
-// Get details of the bytes format.
-func (this *BaseOrder) DetailsBytes(status int32, note string, ip string) []byte {
-	if this.detailsBytes == nil {
-		if this.Details == nil {
-			this.Details = []*Detail{}
-		}
-		this.detailsBytes, _ = json.Marshal(this.Details)
-	}
-
-	return this.detailsBytes
 }
 
 // Get the most recent Action, the default value is UNSET==0.
