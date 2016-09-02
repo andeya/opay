@@ -28,7 +28,7 @@ type (
 		Type uint8 `json:"type"`
 		//the amount of change for the Uid-Aid account, balance of positive and negative representation
 		Amount float64 `json:"amount"`
-		//the amount of change for the Uid-Aid account, balance of positive and negative representation
+		//the amount of change for the Uid-Aid2 account, balance of positive and negative representation
 		Amount2 float64 `json:"amount2,omitempty"`
 
 		Summary      string    `json:"summary"`
@@ -56,35 +56,18 @@ type (
 var _ opay.IOrder = new(BaseOrder)
 
 // Prepare order status before push opay.
-func (this *BaseOrder) Prepare(status int32, ip string) *BaseOrder {
+func (this *BaseOrder) Prepare(status int32, note string, ip string) *BaseOrder {
 	this.lastStatus = this.Status
 	this.Status = status
-	this.Details = append(this.Details, &Detail{
-		UpdatedAt: time.Now().Unix(),
-		Status:    status,
-		Note:      this.GetStatusText(),
-		Ip:        ip,
-	})
-	return this
-}
-
-// Add order detail after prepared status.
-func (this *BaseOrder) SetNote(note string) *BaseOrder {
 	if len(note) == 0 {
 		note = this.GetStatusText()
 	}
-
-	count := len(this.Details)
-	if this.Details[count-1].Status != this.Status {
-		this.Details = append(this.Details, &Detail{
-			UpdatedAt: time.Now().Unix(),
-			Status:    this.Status,
-			Note:      note,
-		})
-	} else {
-		this.Details[count-1].Note = note
-	}
-
+	this.Details = append(this.Details, &Detail{
+		UpdatedAt: time.Now().Unix(),
+		Status:    status,
+		Note:      note,
+		Ip:        ip,
+	})
 	return this
 }
 
