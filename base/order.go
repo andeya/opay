@@ -56,10 +56,9 @@ type (
 var _ opay.IOrder = new(BaseOrder)
 
 // Prepare order status before push opay.
-func (this *BaseOrder) PrepareStatus(status int32, notes string, ip string) *BaseOrder {
+func (this *BaseOrder) Prepare(status int32, notes string, ip string) *BaseOrder {
 	this.lastStatus = this.Status
 	this.Status = status
-
 	return this
 }
 
@@ -79,9 +78,12 @@ func (this *BaseOrder) AddDetail(notes string, ip string) *BaseOrder {
 
 // Rollback order status and detail in memory after dealing failure.
 func (this *BaseOrder) Rollback() *BaseOrder {
-	this.Status = this.lastStatus
-	this.Details = this.Details[:len(this.Details)-1]
+	count := len(this.Details)
+	if this.Details[count-1].Status == this.Status {
+		this.Details = this.Details[:count-1]
+	}
 	this.detailsBytes = nil
+	this.Status = this.lastStatus
 	return this
 }
 
