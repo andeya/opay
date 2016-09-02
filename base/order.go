@@ -1,6 +1,7 @@
 package base
 
 import (
+	"encoding/json"
 	"errors"
 	"sync"
 	"time"
@@ -30,10 +31,11 @@ type (
 		//the amount of change for the Uid-Aid account, balance of positive and negative representation
 		Amount2 float64 `json:"amount2,omitempty"`
 
-		Summary   string    `json:"summary"`
-		Details   []*Detail `json:"details"`
-		Status    int32     `json:"status"`
-		CreatedAt int64     `json:"created_at"`
+		Summary      string    `json:"summary"`
+		Details      []*Detail `json:"details"`
+		detailsBytes []byte
+		Status       int32 `json:"status"`
+		CreatedAt    int64 `json:"created_at"`
 
 		//the most recent status
 		lastStatus int32
@@ -73,7 +75,20 @@ func (this *BaseOrder) PrepareStatus(status int32, notes string, ip string) *Bas
 func (this *BaseOrder) RollbackStatus(status int32, notes string, ip string) *BaseOrder {
 	this.Status = this.lastStatus
 	this.Details = this.Details[:len(this.Details)-1]
+	this.detailsBytes = nil
 	return this
+}
+
+// Get details of the bytes format.
+func (this *BaseOrder) DetailsBytes(status int32, notes string, ip string) []byte {
+	if this.detailsBytes == nil {
+		if this.Details == nil {
+			this.Details = []*Detail{}
+		}
+		this.detailsBytes, _ = json.Marshal(this.Details)
+	}
+
+	return this.detailsBytes
 }
 
 // Get the most recent Action, the default value is UNSET==0.
