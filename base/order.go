@@ -48,7 +48,7 @@ type (
 	Detail struct {
 		UpdatedAt int64  `json:"updated_at"`
 		Status    int32  `json:"status"`
-		Notes     string `json:"notes"`
+		Note      string `json:"note"`
 		Ip        string `json:"ip"`
 	}
 )
@@ -56,23 +56,35 @@ type (
 var _ opay.IOrder = new(BaseOrder)
 
 // Prepare order status before push opay.
-func (this *BaseOrder) Prepare(status int32, notes string, ip string) *BaseOrder {
+func (this *BaseOrder) Prepare(status int32, ip string) *BaseOrder {
 	this.lastStatus = this.Status
 	this.Status = status
+	this.Details = append(this.Details, &Detail{
+		UpdatedAt: time.Now().Unix(),
+		Status:    status,
+		Note:      this.GetStatusText(),
+		Ip:        ip,
+	})
 	return this
 }
 
 // Add order detail after prepared status.
-func (this *BaseOrder) AddDetail(notes string, ip string) *BaseOrder {
-	if len(notes) == 0 {
-		notes = this.GetStatusText()
+func (this *BaseOrder) SetNote(note string) *BaseOrder {
+	if len(note) == 0 {
+		note = this.GetStatusText()
 	}
-	this.Details = append(this.Details, &Detail{
-		UpdatedAt: time.Now().Unix(),
-		Status:    this.Status,
-		Notes:     notes,
-		Ip:        ip,
-	})
+
+	count := len(this.Details)
+	if this.Details[count-1].Status != this.Status {
+		this.Details = append(this.Details, &Detail{
+			UpdatedAt: time.Now().Unix(),
+			Status:    this.Status,
+			Note:      note,
+		})
+	} else {
+		this.Details[count-1].Note = note
+	}
+
 	return this
 }
 
@@ -88,7 +100,7 @@ func (this *BaseOrder) Rollback() *BaseOrder {
 }
 
 // Get details of the bytes format.
-func (this *BaseOrder) DetailsBytes(status int32, notes string, ip string) []byte {
+func (this *BaseOrder) DetailsBytes(status int32, note string, ip string) []byte {
 	if this.detailsBytes == nil {
 		if this.Details == nil {
 			this.Details = []*Detail{}
