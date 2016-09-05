@@ -40,7 +40,8 @@ type (
 
 var _ opay.IOrder = new(BaseOrder)
 
-//note: if param note is empty, do not append detail.
+//note: if param note is empty, do not append detail;
+//and if param id is empty, the BaseOrder is new one.
 func NewBaseOrder(
 	id string,
 	aid string,
@@ -55,8 +56,10 @@ func NewBaseOrder(
 	ip string,
 ) *BaseOrder {
 	var o = new(BaseOrder)
+	t := time.Now().Unix()
 	if len(id) == 0 {
 		o.SetNewId()
+		o.CreatedAt = t
 	}
 	o.Aid = aid
 	o.Uid = uid
@@ -69,10 +72,6 @@ func NewBaseOrder(
 		o.Details = []*Detail{}
 	} else {
 		o.Details = curDetail
-	}
-	t := time.Now().Unix()
-	if opay.Action(o.Status) == opay.PEND || opay.Action(o.Status) == opay.SYNC_DEAL {
-		o.CreatedAt = t
 	}
 	if len(note) > 0 {
 		targetDetail := &Detail{
