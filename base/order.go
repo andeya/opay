@@ -55,6 +55,12 @@ type (
 
 var _ opay.IOrder = new(BaseOrder)
 
+// set order id, 32bytes(time23+type3+random6)
+func (this *BaseOrder) NewId() *BaseOrder {
+	this.Id = CreateOrderid(this.Type)
+	return this
+}
+
 // Prepare order status before push opay.
 func (this *BaseOrder) Prepare(status int32, note string, ip string) *BaseOrder {
 	this.lastStatus = this.Status
@@ -205,10 +211,4 @@ func (this *BaseOrder) GetCreatedAt() int64 {
 func (this *BaseOrder) Bind(other *BaseOrder) {
 	this.Id2, this.Uid2 = other.Id, other.Uid
 	other.Id2, other.Uid2 = this.Id, this.Uid
-}
-
-// set order id, 32bytes(time23+type3+random6)
-func (this *BaseOrder) setId() *BaseOrder {
-	this.Id = CreateOrderid(this.Type)
-	return this
 }
