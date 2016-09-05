@@ -16,6 +16,9 @@ var _ Handler = (*Withdraw)(nil)
 
 // 执行入口
 func (w *Withdraw) ServeOpay(ctx *opay.Context) error {
+	if ctx.HasStakeholder() {
+		return opay.ErrExtraStakeholder
+	}
 	return w.Call(w, ctx)
 }
 

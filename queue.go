@@ -1,6 +1,7 @@
 package opay
 
 import (
+	"errors"
 	"log"
 	"runtime"
 	"sync"
@@ -59,6 +60,13 @@ func (oc *OrderChan) Push(req Request) (respChan <-chan Response, err error) {
 	defer oc.mu.RUnlock()
 
 	respChan = req.prepare()
+	if req.Initiator == nil {
+		err = errors.New("Request.Initiator Can not be nil.")
+		req.setError(err)
+		req.writeback()
+		return
+	}
+
 	timeout, err := checkTimeout(req.Deadline)
 
 	if err != nil {

@@ -16,6 +16,9 @@ var _ Handler = (*Exchange)(nil)
 
 // 执行入口
 func (e *Exchange) ServeOpay(ctx *opay.Context) error {
+	if !ctx.HasStakeholder() {
+		return opay.ErrStakeholderNotExist
+	}
 	return e.Call(e, ctx)
 }
 
@@ -23,11 +26,6 @@ func (e *Exchange) ServeOpay(ctx *opay.Context) error {
 func (e *Exchange) ToSucceed() error {
 	// 操作账户
 	err := e.Background.Context.UpdateBalance()
-	if err != nil {
-		return err
-	}
-
-	err = e.Background.Context.UpdateAid2Balance()
 	if err != nil {
 		return err
 	}
@@ -40,11 +38,6 @@ func (e *Exchange) ToSucceed() error {
 func (e *Exchange) SyncDeal() error {
 	// 操作账户
 	err := e.Background.Context.UpdateBalance()
-	if err != nil {
-		return err
-	}
-
-	err = e.Background.Context.UpdateAid2Balance()
 	if err != nil {
 		return err
 	}

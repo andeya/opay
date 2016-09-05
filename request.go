@@ -1,6 +1,7 @@
 package opay
 
 import (
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -9,17 +10,23 @@ import (
 )
 
 type Request struct {
-	Key      string                 //the specified handler
-	Action   Action                 //the specified handler's action
-	Deadline time.Time              //handle timeouts, if do not fill, no limit
-	IOrder                          //instance of Order Interface
-	Values   map[string]interface{} //addition params
-	response *Response
-	respChan chan<- Response //result signal
-	*sqlx.Tx                 //the optional, database transaction
-	done     bool
-	lock     sync.RWMutex
+	Key         string                 //the specified handler
+	Action      Action                 //the specified handler's action
+	Deadline    time.Time              //handle timeouts, if do not fill, no limit
+	Initiator   IOrder                 //master order
+	Stakeholder IOrder                 //the optional, slave order
+	Values      map[string]interface{} //addition params
+	response    *Response
+	respChan    chan<- Response //result signal
+	*sqlx.Tx                    //the optional, database transaction
+	done        bool
+	lock        sync.RWMutex
 }
+
+var (
+	ErrStakeholderNotExist = errors.New("Stakeholder Order is not exist.")
+	ErrExtraStakeholder    = errors.New("Stakeholder Order is extra.")
+)
 
 // 检查处理行为Action是否合法
 func (req *Request) ValidateAction() error {
@@ -29,8 +36,13 @@ func (req *Request) ValidateAction() error {
 	}
 
 	// 检查是否为重复处理
-	if req.IOrder.LastAction() == req.Action {
+	if req.Initiator.LastAction() == req.Action {
 		return ErrReprocess
+	}
+	if req.Stakeholder != nil {
+		if req.Stakeholder.LastAction() == req.Action {
+			return ErrDifferentAction
+		}
 	}
 	return nil
 }

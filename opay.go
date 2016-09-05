@@ -47,24 +47,25 @@ func (engine *Engine) Serve() {
 
 		// 获取账户操作接口
 		var (
-			iAccount     IAccount
-			withIAccount IAccount
+			initiatorIAccount   IAccount
+			stakeholderIAccount IAccount
 		)
 
-		iAccount, err = engine.GetIAccount(req.IOrder.GetAid())
+		initiatorIAccount, err = engine.GetIAccount(req.Initiator.GetAid())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
 			req.setError(err)
 			req.writeback()
 			continue
 		}
-
-		withIAccount, err = engine.GetIAccount(req.IOrder.GetAid2())
-		if err != nil {
-			// 指定的资产账户的操作接口不存在时返回
-			req.setError(err)
-			req.writeback()
-			continue
+		if req.Stakeholder != nil {
+			stakeholderIAccount, err = engine.GetIAccount(req.Stakeholder.GetAid())
+			if err != nil {
+				// 指定的资产账户的操作接口不存在时返回
+				req.setError(err)
+				req.writeback()
+				continue
+			}
 		}
 
 		// 通过路由执行订单处理
@@ -96,8 +97,8 @@ func (engine *Engine) Serve() {
 			}
 
 			err = engine.ServeMux.serve(&Context{
-				account:     iAccount,
-				withAccount: withIAccount,
+				account:     initiatorIAccount,
+				withAccount: stakeholderIAccount,
 				Request:     req,
 			})
 		}()

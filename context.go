@@ -27,62 +27,115 @@ func (ctx *Context) Deadline() time.Time {
 
 // 新建订单，并标记为等待处理状态
 func (ctx *Context) ToPend() error {
-	return ctx.Request.IOrder.ToPend(ctx.Request.Tx, ctx.Request.response)
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.Request.Stakeholder.ToPend(ctx.Request.Tx, ctx.Request.response)
+		if err != nil {
+			return err
+		}
+	}
+	return ctx.Request.Initiator.ToPend(ctx.Request.Tx, ctx.Request.response)
 }
 
 // 标记订单为正在处理状态，或有相关异步回调操作
 func (ctx *Context) ToDo() error {
-	return ctx.Request.IOrder.ToDo(ctx.Request.Tx, ctx.Request.response)
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.Request.Stakeholder.ToDo(ctx.Request.Tx, ctx.Request.response)
+		if err != nil {
+			return err
+		}
+	}
+	return ctx.Request.Initiator.ToDo(ctx.Request.Tx, ctx.Request.response)
 }
 
 // 处理账户并标记订单为成功状态
 func (ctx *Context) ToSucceed() error {
-	return ctx.Request.IOrder.ToSucceed(ctx.Request.Tx, ctx.Request.response)
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.Request.Stakeholder.ToSucceed(ctx.Request.Tx, ctx.Request.response)
+		if err != nil {
+			return err
+		}
+	}
+	return ctx.Request.Initiator.ToSucceed(ctx.Request.Tx, ctx.Request.response)
 }
 
 // 标记订单为撤销状态
 func (ctx *Context) ToCancel() error {
-	return ctx.Request.IOrder.ToCancel(ctx.Request.Tx, ctx.Request.response)
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.Request.Stakeholder.ToCancel(ctx.Request.Tx, ctx.Request.response)
+		if err != nil {
+			return err
+		}
+	}
+	return ctx.Request.Initiator.ToCancel(ctx.Request.Tx, ctx.Request.response)
 }
 
 // 标记订单为失败状态
 func (ctx *Context) ToFail() error {
-	return ctx.Request.IOrder.ToFail(ctx.Request.Tx, ctx.Request.response)
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.Request.Stakeholder.ToFail(ctx.Request.Tx, ctx.Request.response)
+		if err != nil {
+			return err
+		}
+	}
+	return ctx.Request.Initiator.ToFail(ctx.Request.Tx, ctx.Request.response)
 }
 
 // 同步处理订单，并标记为成功状态
 func (ctx *Context) SyncDeal() error {
-	return ctx.Request.IOrder.SyncDeal(ctx.Request.Tx, ctx.Request.response)
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.Request.Stakeholder.SyncDeal(ctx.Request.Tx, ctx.Request.response)
+		if err != nil {
+			return err
+		}
+	}
+	return ctx.Request.Initiator.SyncDeal(ctx.Request.Tx, ctx.Request.response)
 }
 
-// 针对 Uid-Aid 账户，修改账户余额。
+func (ctx *Context) HasStakeholder() bool {
+	return ctx.Request.Stakeholder != nil
+}
+
+// 修改账户余额。
 func (ctx *Context) UpdateBalance() error {
-	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.response)
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.account.UpdateBalance(
+			ctx.Request.Stakeholder.GetUid(),
+			ctx.Request.Stakeholder.GetAmount(),
+			ctx.Request.Tx,
+			ctx.Request.response,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return ctx.account.UpdateBalance(
+		ctx.Request.Initiator.GetUid(),
+		ctx.Request.Initiator.GetAmount(),
+		ctx.Request.Tx,
+		ctx.Request.response,
+	)
 }
 
-// 针对 Uid-Aid 账户，回滚账户余额。
+// 回滚账户余额。
 func (ctx *Context) RollbackBalance() error {
-	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.response)
-}
+	if ctx.Request.Stakeholder != nil {
+		err := ctx.account.UpdateBalance(
+			ctx.Request.Stakeholder.GetUid(),
+			-ctx.Request.Stakeholder.GetAmount(),
+			ctx.Request.Tx,
+			ctx.Request.response,
+		)
+		if err != nil {
+			return err
+		}
+	}
 
-// 针对 Uid2-Aid 账户，修改账户余额。
-func (ctx *Context) UpdateUid2Balance() error {
-	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid2(), -ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.response)
-}
-
-// 针对 Uid2-Aid 账户，回滚账户余额。
-func (ctx *Context) RollbackUid2Balance() error {
-	return ctx.account.UpdateBalance(ctx.Request.IOrder.GetUid2(), ctx.Request.IOrder.GetAmount(), ctx.Request.Tx, ctx.Request.response)
-}
-
-// 针对 Uid-Aid2 账户，修改账户余额。
-func (ctx *Context) UpdateAid2Balance() error {
-	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), ctx.Request.IOrder.GetAmount2(), ctx.Request.Tx, ctx.Request.response)
-}
-
-// 针对 Uid-Aid2 账户，回滚账户余额。
-func (ctx *Context) RollbackAid2Balance() error {
-	return ctx.withAccount.UpdateBalance(ctx.Request.IOrder.GetUid(), -ctx.Request.IOrder.GetAmount2(), ctx.Request.Tx, ctx.Request.response)
+	return ctx.account.UpdateBalance(
+		ctx.Request.Initiator.GetUid(),
+		-ctx.Request.Initiator.GetAmount(),
+		ctx.Request.Tx,
+		ctx.Request.response,
+	)
 }
 
 // Write response values.

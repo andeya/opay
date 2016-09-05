@@ -16,6 +16,9 @@ var _ Handler = (*Recharge)(nil)
 
 // 执行入口
 func (r *Recharge) ServeOpay(ctx *opay.Context) error {
+	if ctx.HasStakeholder() {
+		return opay.ErrExtraStakeholder
+	}
 	return r.Call(r, ctx)
 }
 

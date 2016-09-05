@@ -15,22 +15,12 @@ type (
 		// Get user's id.
 		GetUid() string
 
-		// Get the second party's user id.
-		GetUid2() string
-
 		// Get asset id.
 		GetAid() string
-
-		// Get the second party's asset id. (for example, the currency exchange business)
-		GetAid2() string
 
 		// Get the amount of change for the Uid-Aid account,
 		// balance of positive and negative representation.
 		GetAmount() float64
-
-		// Get the amount of change for the Uid-Aid2 account,
-		// balance of positive and negative representation.
-		GetAmount2() float64
 
 		// Async execution, and mark pending.
 		ToPend(tx *sqlx.Tx, values Values) error
@@ -77,6 +67,7 @@ var (
 		SYNC_DEAL: true,
 	}
 
-	ErrInvalidAction = errors.New("Invalid Action.")
-	ErrReprocess     = errors.New("Repeat process order.")
+	ErrInvalidAction   = errors.New("Invalid Action.")
+	ErrReprocess       = errors.New("Repeat process order.")
+	ErrDifferentAction = errors.New("Initiator's Action and Stakeholder must be same.")
 )
