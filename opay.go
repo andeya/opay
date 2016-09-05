@@ -30,13 +30,13 @@ func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Engine {
 		decimalPlaces = DEFAULT_DECIMAL_PLACES
 	}
 	accuracyString := "0." + strings.Repeat("0", decimalPlaces-1) + "1"
-	accuracy, _ := strconv.ParseFloat(accuracyString, 64)
+	accuracyFloat64, _ := strconv.ParseFloat(accuracyString, 64)
 	engine := &Engine{
 		AccList:  globalAccList,
 		ServeMux: globalServeMux,
 		queue:    newOrderChan(queueCapacity),
 		db:       db,
-		Accuracy: Accuracy(accuracy),
+		Accuracy: func() float64 { return accuracyFloat64 },
 	}
 	engine.queue.SetAccuracy(engine.Accuracy)
 	return engine
