@@ -26,6 +26,7 @@ type Request struct {
 var (
 	ErrStakeholderNotExist = errors.New("Stakeholder Order is not exist.")
 	ErrExtraStakeholder    = errors.New("Stakeholder Order is extra.")
+	ErrIncorrectAmount     = errors.New("Account operation amount is incorrect.")
 )
 
 // 检查处理行为Action是否合法
@@ -48,7 +49,7 @@ func (req *Request) ValidateAction() error {
 }
 
 // Prepare the request.
-func (req *Request) prepare() (respChan <-chan Response) {
+func (req *Request) prepare() (respChan <-chan Response, err error) {
 	req.done = false
 	if req.Values == nil {
 		req.Values = make(map[string]interface{})
@@ -56,7 +57,22 @@ func (req *Request) prepare() (respChan <-chan Response) {
 	req.response = &Response{Values: req.Values}
 	c := make(chan Response)
 	req.respChan = (chan<- Response)(c)
-	return (<-chan Response)(c)
+	respChan = (<-chan Response)(c)
+
+	if req.Initiator == nil {
+		err = errors.New("Request.Initiator Can not be nil.")
+		return
+	}
+
+	if Equal(req.Initiator.GetAmount(), 0) {
+		err = ErrIncorrectAmount
+		return
+	}
+
+	if req.Stakeholder != nil && Equal(req.Stakeholder.GetAmount(), 0) {
+		err = ErrIncorrectAmount
+	}
+	return
 }
 
 // Write response body.

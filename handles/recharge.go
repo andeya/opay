@@ -19,6 +19,9 @@ func (r *Recharge) ServeOpay(ctx *opay.Context) error {
 	if ctx.HasStakeholder() {
 		return opay.ErrExtraStakeholder
 	}
+	if opay.SmallerOrEqual(ctx.Request.Initiator.GetAmount(), 0) {
+		return opay.ErrIncorrectAmount
+	}
 	return r.Call(r, ctx)
 }
 

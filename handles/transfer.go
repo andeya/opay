@@ -19,6 +19,10 @@ func (t *Transfer) ServeOpay(ctx *opay.Context) error {
 	if !ctx.HasStakeholder() {
 		return opay.ErrStakeholderNotExist
 	}
+	if opay.GreaterOrEqual(ctx.Request.Initiator.GetAmount(), 0) ||
+		opay.SmallerOrEqual(ctx.Request.Stakeholder.GetAmount(), 0) {
+		return opay.ErrIncorrectAmount
+	}
 	return t.Call(t, ctx)
 }
 
