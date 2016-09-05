@@ -23,16 +23,11 @@ type (
 		Summary      string    `json:"summary"`
 		Details      []*Detail `json:"details"`
 		detailsBytes []byte
-		Status       int32 `json:"status"`
+		lastStatus   int32 //the most recent status
+		Status       int32 `json:"status"` //the target status
 		CreatedAt    int64 `json:"created_at"`
-		Visible      bool  `json:"visible"`
 
-		//the most recent status
-		lastStatus int32
-
-		//processing error
-		err error
-
+		err  error //processing error
 		lock sync.RWMutex
 	}
 	Detail struct {
@@ -75,9 +70,13 @@ func NewBaseOrder(
 	} else {
 		o.Details = curDetail
 	}
+	t := time.Now().Unix()
+	if opay.Action(o.Status) == opay.PEND || opay.Action(o.Status) == opay.SYNC_DEAL {
+		o.CreatedAt = t
+	}
 	if len(note) > 0 {
 		targetDetail := &Detail{
-			UpdatedAt: time.Now().Unix(),
+			UpdatedAt: t,
 			Status:    o.Status,
 			Note:      note,
 			Ip:        ip,
