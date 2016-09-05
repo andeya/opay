@@ -49,7 +49,7 @@ func (req *Request) ValidateAction() error {
 }
 
 // Prepare the request.
-func (req *Request) prepare() (respChan <-chan Response, err error) {
+func (req *Request) prepare(a Accuracy) (respChan <-chan Response, err error) {
 	req.done = false
 	if req.Values == nil {
 		req.Values = make(map[string]interface{})
@@ -64,14 +64,15 @@ func (req *Request) prepare() (respChan <-chan Response, err error) {
 		return
 	}
 
-	if Equal(req.Initiator.GetAmount(), 0) {
+	if a.Equal(req.Initiator.GetAmount(), 0) {
 		err = ErrIncorrectAmount
 		return
 	}
 
-	if req.Stakeholder != nil && Equal(req.Stakeholder.GetAmount(), 0) {
+	if req.Stakeholder != nil && a.Equal(req.Stakeholder.GetAmount(), 0) {
 		err = ErrIncorrectAmount
 	}
+
 	return
 }
 

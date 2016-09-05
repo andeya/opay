@@ -13,11 +13,14 @@ type (
 		SetCap(int)
 		Push(Request) (respChan <-chan Response, err error)
 		Pull() Request
+		SetAccuracy(Accuracy)
+		GetAccuracy() Accuracy
 	}
 
 	OrderChan struct {
-		c  chan Request
-		mu sync.RWMutex
+		c        chan Request
+		mu       sync.RWMutex
+		accuracy Accuracy
 	}
 )
 
@@ -58,7 +61,7 @@ func (oc *OrderChan) Push(req Request) (respChan <-chan Response, err error) {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
-	respChan, err = req.prepare()
+	respChan, err = req.prepare(oc.GetAccuracy())
 	if err != nil {
 		req.setError(err)
 		req.writeback()
@@ -121,4 +124,16 @@ func (oc *OrderChan) Pull() Request {
 	}
 
 	return req
+}
+
+func (oc *OrderChan) GetAccuracy() Accuracy {
+	oc.mu.RLock()
+	defer oc.mu.RUnlock()
+	return oc.accuracy
+}
+
+func (oc *OrderChan) SetAccuracy(a Accuracy) {
+	oc.mu.Lock()
+	oc.accuracy = a
+	oc.mu.Unlock()
 }

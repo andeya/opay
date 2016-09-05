@@ -19,7 +19,7 @@ func (w *Withdraw) ServeOpay(ctx *opay.Context) error {
 	if ctx.HasStakeholder() {
 		return opay.ErrExtraStakeholder
 	}
-	if opay.GreaterOrEqual(ctx.Request.Initiator.GetAmount(), 0) {
+	if ctx.GreaterOrEqual(ctx.Request.Initiator.GetAmount(), 0) {
 		return opay.ErrIncorrectAmount
 	}
 	return w.Call(w, ctx)

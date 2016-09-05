@@ -25,26 +25,24 @@ func checkTimeout(deadline time.Time) (timeout time.Duration, errTimeout error) 
 	return
 }
 
-const (
-	ACCURACY = 0.0000000001
-)
+type Accuracy float64
 
-func Equal(a, b float64) bool {
-	return math.Abs(a-b) < ACCURACY
+func (this Accuracy) Equal(a, b float64) bool {
+	return math.Abs(a-b) < float64(this)
 }
 
-func Greater(a, b float64) bool {
-	return math.Max(a, b) == a && math.Abs(a-b) > ACCURACY
+func (this Accuracy) Greater(a, b float64) bool {
+	return math.Max(a, b) == a && math.Abs(a-b) > float64(this)
 }
 
-func Smaller(a, b float64) bool {
-	return math.Max(a, b) == b && math.Abs(a-b) > ACCURACY
+func (this Accuracy) Smaller(a, b float64) bool {
+	return math.Max(a, b) == b && math.Abs(a-b) > float64(this)
 }
 
-func GreaterOrEqual(a, b float64) bool {
-	return math.Max(a, b) == a || math.Abs(a-b) < ACCURACY
+func (this Accuracy) GreaterOrEqual(a, b float64) bool {
+	return math.Max(a, b) == a || math.Abs(a-b) < float64(this)
 }
 
-func SmallerOrEqual(a, b float64) bool {
-	return math.Max(a, b) == b || math.Abs(a-b) < ACCURACY
+func (this Accuracy) SmallerOrEqual(a, b float64) bool {
+	return math.Max(a, b) == b || math.Abs(a-b) < float64(this)
 }

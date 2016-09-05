@@ -2,31 +2,47 @@ package opay
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type (
-	// 订单处理引擎
+	// Order Processing Engine.
 	Engine struct {
-		*AccList           //账户操作接口列表
-		*ServeMux          //订单操作接口全局路由
-		queue     Queue    //订单队列接口
-		db        *sqlx.DB //全局数据库操作对象
+		*AccList           //interface list of account handler
+		*ServeMux          //global router of handler
+		queue     Queue    //request queue
+		db        *sqlx.DB //global database operation instance
+		Accuracy
 	}
 )
 
-// 新建订单处理服务
-func NewOpay(db *sqlx.DB, queueCapacity int) *Engine {
-	return &Engine{
+const (
+	DEFAULT_DECIMAL_PLACES int = 8
+)
+
+// New a Order Processing Engine.
+// If param @decimalPlaces < 0, uses default value(8).
+func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Engine {
+	if decimalPlaces < 0 {
+		decimalPlaces = DEFAULT_DECIMAL_PLACES
+	}
+	accuracyString := "0." + strings.Repeat("0", decimalPlaces-1) + "1"
+	accuracy, _ := strconv.ParseFloat(accuracyString, 64)
+	engine := &Engine{
 		AccList:  globalAccList,
 		ServeMux: globalServeMux,
 		queue:    newOrderChan(queueCapacity),
 		db:       db,
+		Accuracy: Accuracy(accuracy),
 	}
+	engine.queue.SetAccuracy(engine.Accuracy)
+	return engine
 }
 
-// 启动订单处理服务
+// Engine start.
 func (engine *Engine) Serve() {
 	if err := engine.db.Ping(); err != nil {
 		panic(err)
@@ -100,6 +116,7 @@ func (engine *Engine) Serve() {
 				account:     initiatorIAccount,
 				withAccount: stakeholderIAccount,
 				Request:     req,
+				Accuracy:    engine.Accuracy,
 			})
 		}()
 	}

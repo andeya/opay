@@ -8,6 +8,7 @@ type Context struct {
 	account     IAccount //instance of Account Interface
 	withAccount IAccount //the second party's instance of Account Interface
 	Request
+	Accuracy
 }
 
 // 获取指定处理类型
