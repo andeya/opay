@@ -61,10 +61,16 @@ func (this *BaseOrder) NewId() *BaseOrder {
 	return this
 }
 
-// set order id, 32bytes(time23+type3+random6)
+// set order id2, 32bytes(time23+type3+random6)
 func (this *BaseOrder) NewId2() *BaseOrder {
 	this.Id2 = CreateOrderid(this.Type)
 	return this
+}
+
+// Binding the order and it's related order.
+func (this *BaseOrder) Bind(other *BaseOrder) {
+	this.Id2, this.Uid2 = other.Id, other.Uid
+	other.Id2, other.Uid2 = this.Id, this.Uid
 }
 
 // Prepare order status before push opay.
@@ -211,10 +217,4 @@ func (this *BaseOrder) GetStatus() int32 {
 // Get the order's created time.
 func (this *BaseOrder) GetCreatedAt() int64 {
 	return this.CreatedAt
-}
-
-// Binding the order and it's related order.
-func (this *BaseOrder) Bind(other *BaseOrder) {
-	this.Id2, this.Uid2 = other.Id, other.Uid
-	other.Id2, other.Uid2 = this.Id, this.Uid
 }
