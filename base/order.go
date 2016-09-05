@@ -61,6 +61,12 @@ func (this *BaseOrder) NewId() *BaseOrder {
 	return this
 }
 
+// set order id, 32bytes(time23+type3+random6)
+func (this *BaseOrder) NewId2() *BaseOrder {
+	this.Id2 = CreateOrderid(this.Type)
+	return this
+}
+
 // Prepare order status before push opay.
 func (this *BaseOrder) Prepare(status int32, note string, ip string) *BaseOrder {
 	this.lastStatus = this.Status
