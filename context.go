@@ -5,8 +5,8 @@ import (
 )
 
 type Context struct {
-	initiatorSettlement   SettlementFunc
-	stakeholderSettlement SettlementFunc
+	initiatorSettle   SettleFunc
+	stakeholderSettle SettleFunc
 	Request
 	Accuracy
 }
@@ -99,7 +99,7 @@ func (ctx *Context) HasStakeholder() bool {
 // 修改账户余额。
 func (ctx *Context) UpdateBalance() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.stakeholderSettlement(
+		err := ctx.stakeholderSettle(
 			ctx.Request.Stakeholder.GetUid(),
 			ctx.Request.Stakeholder.GetAmount(),
 			ctx.Request.Tx,
@@ -109,7 +109,7 @@ func (ctx *Context) UpdateBalance() error {
 			return err
 		}
 	}
-	return ctx.initiatorSettlement(
+	return ctx.initiatorSettle(
 		ctx.Request.Initiator.GetUid(),
 		ctx.Request.Initiator.GetAmount(),
 		ctx.Request.Tx,
@@ -120,7 +120,7 @@ func (ctx *Context) UpdateBalance() error {
 // 回滚账户余额。
 func (ctx *Context) RollbackBalance() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.stakeholderSettlement(
+		err := ctx.stakeholderSettle(
 			ctx.Request.Stakeholder.GetUid(),
 			-ctx.Request.Stakeholder.GetAmount(),
 			ctx.Request.Tx,
@@ -131,7 +131,7 @@ func (ctx *Context) RollbackBalance() error {
 		}
 	}
 
-	return ctx.initiatorSettlement(
+	return ctx.initiatorSettle(
 		ctx.Request.Initiator.GetUid(),
 		-ctx.Request.Initiator.GetAmount(),
 		ctx.Request.Tx,

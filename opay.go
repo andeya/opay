@@ -11,7 +11,7 @@ import (
 type (
 	// Order Processing Engine.
 	Engine struct {
-		*SettlementMux          //global router of SettlementFunc
+		*SettleFuncMap          //global map of SettleFunc
 		*ServeMux               //global router of handler
 		queue          Queue    //request queue
 		db             *sqlx.DB //global database operation instance
@@ -32,7 +32,7 @@ func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Engine {
 	accuracyString := "0." + strings.Repeat("0", decimalPlaces-1) + "1"
 	accuracyFloat64, _ := strconv.ParseFloat(accuracyString, 64)
 	engine := &Engine{
-		SettlementMux: globalSettlementMux,
+		SettleFuncMap: globalSettleFuncMap,
 		ServeMux:      globalServeMux,
 		queue:         newOrderChan(queueCapacity),
 		db:            db,
@@ -63,11 +63,11 @@ func (engine *Engine) Serve() {
 
 		// 获取相应资产类型的账户余额操作函数
 		var (
-			initiatorSettlement   SettlementFunc
-			stakeholderSettlement SettlementFunc
+			initiatorSettle   SettleFunc
+			stakeholderSettle SettleFunc
 		)
 
-		initiatorSettlement, err = engine.GetSettlementFunc(req.Initiator.GetAid())
+		initiatorSettle, err = engine.GetSettleFunc(req.Initiator.GetAid())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
 			req.setError(err)
@@ -75,7 +75,7 @@ func (engine *Engine) Serve() {
 			continue
 		}
 		if req.Stakeholder != nil {
-			stakeholderSettlement, err = engine.GetSettlementFunc(req.Stakeholder.GetAid())
+			stakeholderSettle, err = engine.GetSettleFunc(req.Stakeholder.GetAid())
 			if err != nil {
 				// 指定的资产账户的操作接口不存在时返回
 				req.setError(err)
@@ -113,10 +113,10 @@ func (engine *Engine) Serve() {
 			}
 
 			err = engine.ServeMux.serve(&Context{
-				initiatorSettlement:   initiatorSettlement,
-				stakeholderSettlement: stakeholderSettlement,
-				Request:               req,
-				Accuracy:              engine.Accuracy,
+				initiatorSettle:   initiatorSettle,
+				stakeholderSettle: stakeholderSettle,
+				Request:           req,
+				Accuracy:          engine.Accuracy,
 			})
 		}()
 	}
