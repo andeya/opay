@@ -8,14 +8,24 @@ import (
 )
 
 type BaseAccount struct {
+	Uid       string `json:"uid" db:"uid"`     //user id
+	Aid       string `json:"aid" db:"aid"`     //asset id
+	Total     string `json:"total" db:"total"` //account balance
+	Ip        string `json:"ip" db:"ip"`
+	UpdatedAt int64  `json:"updated_at" db:"updated_at"`
 	tableName string //database table name
 }
 
 var _ opay.IAccount = new(BaseAccount)
 
-// 账户总额变动
-// amount正负代表收支
-// 调用者需为字段完整的对象指针
 func (this *BaseAccount) UpdateBalance(uid string, amount float64, tx *sqlx.Tx, values opay.Values) error {
 	return errors.New("*BaseAccount does not implement opay.IAccount (missing UpdateBalance method).")
+}
+
+func (this *BaseAccount) TableName() string {
+	return this.tableName
+}
+
+func (this *BaseAccount) SetTableName(tableName string) {
+	this.tableName = tableName
 }
