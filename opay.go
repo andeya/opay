@@ -126,3 +126,7 @@ func (engine *Engine) Serve() {
 func (engine *Engine) Push(req Request) (respChan <-chan Response, err error) {
 	return engine.queue.Push(req)
 }
+
+func (engine *Engine) DB() *sqlx.DB {
+	return engine.db
+}
