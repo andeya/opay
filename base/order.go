@@ -1,10 +1,13 @@
 package base
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/henrylee2cn/opay"
 	"github.com/jmoiron/sqlx"
@@ -19,9 +22,9 @@ type (
 		Uid    string `json:"uid"`  //user id
 		Type   uint8  `json:"type"` //order type
 		//the amount of change for the Uid-Aid account, balance of positive and negative representation
-		Amount       float64   `json:"amount"`
-		Summary      string    `json:"summary"`
-		Details      []*Detail `json:"details"`
+		Amount       float64 `json:"amount"`
+		Summary      string  `json:"summary"`
+		Details      Details `json:"details"`
 		detailsBytes []byte
 		lastStatus   int32 //the most recent status
 		Status       int32 `json:"status"` //the target status
@@ -30,7 +33,8 @@ type (
 		err  error //processing error
 		lock sync.RWMutex
 	}
-	Detail struct {
+	Details []*Detail
+	Detail  struct {
 		UpdatedAt int64  `json:"updated_at"`
 		Status    int32  `json:"status"`
 		Note      string `json:"note"`
@@ -203,4 +207,29 @@ func (this *BaseOrder) GetStatus() int32 {
 // Get the order's created time.
 func (this *BaseOrder) GetCreatedAt() int64 {
 	return this.CreatedAt
+}
+
+var (
+	_ sql.Scanner   = new(Details)
+	_ driver.Valuer = new(Details)
+)
+
+// Scan implements the sql Scanner interface.
+func (this *Details) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	s, ok := value.(string)
+	if !ok {
+		return errors.New("cannot convert 'details' to type 'Details'.")
+	}
+	x := (*[2]uintptr)(unsafe.Pointer(&s))
+	h := [3]uintptr{x[0], x[1], x[1]}
+	return json.Unmarshal(*(*[]byte)(unsafe.Pointer(&h)), this)
+}
+
+// Value implements the driver Valuer interface.
+func (this *Details) Value() (driver.Value, error) {
+	b, err := json.Marshal(this)
+	return *(*string)(unsafe.Pointer(&b)), err
 }
