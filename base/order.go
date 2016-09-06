@@ -16,29 +16,29 @@ import (
 type (
 	// Order base model
 	BaseOrder struct {
-		Id     string `json:"id"`
-		LinkId string `json:"link_id"`
-		Aid    string `json:"aid"`  //asset id
-		Uid    string `json:"uid"`  //user id
-		Type   uint8  `json:"type"` //order type
+		Id     string `json:"id" db:"id"`
+		LinkId string `json:"link_id" db:"link_id"`
+		Aid    string `json:"aid" db:"aid"`   //asset id
+		Uid    string `json:"uid" db:"uid"`   //user id
+		Type   uint8  `json:"type" db:"type"` //order type
 		//the amount of change for the Uid-Aid account, balance of positive and negative representation
-		Amount       float64 `json:"amount"`
-		Summary      string  `json:"summary"`
-		Details      Details `json:"details"`
+		Amount       float64 `json:"amount" db:"amount"`
+		Summary      string  `json:"summary" db:"summary"`
+		Details      Details `json:"details" db:"details"`
 		detailsBytes []byte
 		lastStatus   int32 //the most recent status
-		Status       int32 `json:"status"` //the target status
-		CreatedAt    int64 `json:"created_at"`
+		Status       int32 `json:"status" db:"status"` //the target status
+		CreatedAt    int64 `json:"created_at" db:"created_at"`
 
 		err  error //processing error
 		lock sync.RWMutex
 	}
 	Details []*Detail
 	Detail  struct {
-		UpdatedAt int64  `json:"updated_at"`
-		Status    int32  `json:"status"`
-		Note      string `json:"note"`
-		Ip        string `json:"ip"`
+		UpdatedAt int64  `json:"updated_at" db:"-"`
+		Status    int32  `json:"status" db:"-"`
+		Note      string `json:"note" db:"-"`
+		Ip        string `json:"ip" db:"-"`
 	}
 )
 
