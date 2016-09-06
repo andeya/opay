@@ -11,10 +11,10 @@ import (
 type (
 	// Order Processing Engine.
 	Engine struct {
-		*AccList           //interface list of account handler
-		*ServeMux          //global router of handler
-		queue     Queue    //request queue
-		db        *sqlx.DB //global database operation instance
+		*SettlementMux          //global router of SettlementFunc
+		*ServeMux               //global router of handler
+		queue          Queue    //request queue
+		db             *sqlx.DB //global database operation instance
 		Accuracy
 	}
 )
@@ -32,11 +32,11 @@ func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Engine {
 	accuracyString := "0." + strings.Repeat("0", decimalPlaces-1) + "1"
 	accuracyFloat64, _ := strconv.ParseFloat(accuracyString, 64)
 	engine := &Engine{
-		AccList:  globalAccList,
-		ServeMux: globalServeMux,
-		queue:    newOrderChan(queueCapacity),
-		db:       db,
-		Accuracy: func() float64 { return accuracyFloat64 },
+		SettlementMux: globalSettlementMux,
+		ServeMux:      globalServeMux,
+		queue:         newOrderChan(queueCapacity),
+		db:            db,
+		Accuracy:      func() float64 { return accuracyFloat64 },
 	}
 	engine.queue.SetAccuracy(engine.Accuracy)
 	return engine
@@ -61,13 +61,13 @@ func (engine *Engine) Serve() {
 			continue
 		}
 
-		// 获取账户操作接口
+		// 获取相应资产类型的账户余额操作函数
 		var (
-			initiatorIAccount   IAccount
-			stakeholderIAccount IAccount
+			initiatorSettlement   SettlementFunc
+			stakeholderSettlement SettlementFunc
 		)
 
-		initiatorIAccount, err = engine.GetIAccount(req.Initiator.GetAid())
+		initiatorSettlement, err = engine.GetSettlementFunc(req.Initiator.GetAid())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
 			req.setError(err)
@@ -75,7 +75,7 @@ func (engine *Engine) Serve() {
 			continue
 		}
 		if req.Stakeholder != nil {
-			stakeholderIAccount, err = engine.GetIAccount(req.Stakeholder.GetAid())
+			stakeholderSettlement, err = engine.GetSettlementFunc(req.Stakeholder.GetAid())
 			if err != nil {
 				// 指定的资产账户的操作接口不存在时返回
 				req.setError(err)
@@ -113,10 +113,10 @@ func (engine *Engine) Serve() {
 			}
 
 			err = engine.ServeMux.serve(&Context{
-				account:     initiatorIAccount,
-				withAccount: stakeholderIAccount,
-				Request:     req,
-				Accuracy:    engine.Accuracy,
+				initiatorSettlement:   initiatorSettlement,
+				stakeholderSettlement: stakeholderSettlement,
+				Request:               req,
+				Accuracy:              engine.Accuracy,
 			})
 		}()
 	}
