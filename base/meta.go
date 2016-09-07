@@ -1,6 +1,7 @@
 package base
 
 import (
+	"log"
 	"sync"
 
 	"github.com/henrylee2cn/opay"
@@ -24,6 +25,8 @@ func BindOrderOperator(typ uint8, operator string) {
 	defer orderMetaInfos.lock.Unlock()
 	if _, ok := orderMetaInfos.operator[typ]; !ok {
 		orderMetaInfos.operator[typ] = operator
+	} else {
+		log.Printf("Repeat binding order operator: %d - %s\n", typ, operator)
 	}
 }
 
@@ -35,8 +38,12 @@ func BindOrderAboutStatus(typ uint8, status int32, action opay.Action, text stri
 		orderMetaInfos.text[typ] = map[int32]string{}
 		orderMetaInfos.action[typ] = map[int32]opay.Action{}
 	}
-	orderMetaInfos.text[typ][status] = text
-	orderMetaInfos.action[typ][status] = action
+	if _, ok := orderMetaInfos.text[typ][status]; !ok {
+		orderMetaInfos.text[typ][status] = text
+		orderMetaInfos.action[typ][status] = action
+	} else {
+		log.Printf("Repeat binding order status information: %d - %d - %d - %s\n", typ, status, action, text)
+	}
 }
 
 // 获取订单类型的绑定的处理操作符
