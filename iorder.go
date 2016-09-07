@@ -73,7 +73,9 @@ var (
 		SYNC_DEAL: true,
 	}
 
+	ErrUnsetAction       = errors.New("The initiator's target Action cannot equal 'UNSET'.")
 	ErrInvalidAction     = errors.New("Invalid Action.")
+	ErrCancelAction      = errors.New("The Order cannot be canceled.")
 	ErrReprocess         = errors.New("Repeat process order.")
 	ErrDifferentOperator = errors.New("Initiator's Operator and Stakeholder must be same.")
 	ErrDifferentAction   = errors.New("Initiator's Action and Stakeholder must be same.")

@@ -82,12 +82,17 @@ func (req *Request) validate(engine *Engine) error {
 
 	// 必须设定目标处理行为
 	if req.Initiator.TargetAction() == UNSET {
-		return ErrInvalidAction
+		return ErrUnsetAction
 	}
 
 	// 检查处理行为是否超出范围
 	if !actions[req.Initiator.TargetAction()] || !actions[req.Initiator.LastAction()] {
 		return ErrInvalidAction
+	}
+
+	// 非待处理状态的订单不可撤销
+	if req.Initiator.TargetAction() == CANCEL && req.Initiator.LastAction() != PEND {
+		return ErrCancelAction
 	}
 
 	// 主订单操作金额不能为0
