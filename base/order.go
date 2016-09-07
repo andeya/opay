@@ -26,7 +26,7 @@ type (
 		Summary      string  `json:"summary" db:"summary"`
 		Details      Details `json:"details" db:"details"`
 		detailsBytes []byte
-		lastStatus   int32 //the most recent status
+		recentStatus int32 //the most recent status
 		Status       int32 `json:"status" db:"status"` //the target status
 		CreatedAt    int64 `json:"created_at" db:"created_at"`
 
@@ -70,7 +70,7 @@ func NewBaseOrder(
 	o.Type = typ
 	o.Amount = amount
 	o.Summary = summary
-	o.lastStatus = curStatus
+	o.recentStatus = curStatus
 	o.Status = targetStatus
 	if curDetail == nil {
 		o.Details = []*Detail{}
@@ -101,7 +101,7 @@ func (this *BaseOrder) TargetAction() opay.Action {
 
 // Get the most recent Action, the default value is UNSET==0.
 func (this *BaseOrder) RecentAction() opay.Action {
-	return OrderAction(this.Type, this.lastStatus)
+	return OrderAction(this.Type, this.recentStatus)
 }
 
 // Get user's id.
@@ -180,7 +180,7 @@ func (this *BaseOrder) Rollback() *BaseOrder {
 		this.Details = this.Details[:count-1]
 	}
 	this.detailsBytes = nil
-	this.Status = this.lastStatus
+	this.Status = this.recentStatus
 	return this
 }
 
