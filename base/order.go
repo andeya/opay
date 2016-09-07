@@ -58,35 +58,29 @@ func NewBaseOrder(
 	targetStatus int32,
 	note string,
 	ip string,
-) *BaseOrder {
+) (*BaseOrder, error) {
+
 	var o = new(BaseOrder)
-	t := time.Now().Unix()
 	if len(id) == 0 {
 		o.SetNewId()
-		o.CreatedAt = t
+		o.CreatedAt = time.Now().Unix()
 	}
 	o.Aid = aid
 	o.Uid = uid
 	o.Type = typ
 	o.Amount = amount
 	o.Summary = summary
-	o.recentStatus = curStatus
-	o.Status = targetStatus
+	o.Status = curStatus
 	if curDetail == nil {
 		o.Details = []*Detail{}
 	} else {
 		o.Details = curDetail
 	}
-	if len(note) > 0 {
-		targetDetail := &Detail{
-			UpdatedAt: t,
-			Status:    o.Status,
-			Note:      note,
-			Ip:        ip,
-		}
-		o.Details = append(o.Details, targetDetail)
+	err := o.SetTarget(targetStatus, note, ip)
+	if err != nil {
+		return nil, err
 	}
-	return o
+	return o, nil
 }
 
 // Specify the handler of dealing.
@@ -154,6 +148,27 @@ func (this *BaseOrder) SyncDeal(tx *sqlx.Tx, values opay.Values) error {
 func (this *BaseOrder) SetNewId() *BaseOrder {
 	this.Id = CreateOrderid(this.Type)
 	return this
+}
+
+// Set the target Action.
+func (this *BaseOrder) SetTarget(targetStatus int32, note string, ip string) error {
+	if this.Status == targetStatus {
+		return errors.New("Target status and the current status is the same.")
+	}
+	this.recentStatus, this.Status = this.Status, targetStatus
+
+	if this.Details == nil {
+		this.Details = []*Detail{}
+	}
+	if len(note) > 0 {
+		this.Details = append(this.Details, &Detail{
+			UpdatedAt: time.Now().Unix(),
+			Status:    this.Status,
+			Note:      note,
+			Ip:        ip,
+		})
+	}
+	return nil
 }
 
 // Binding the order and it's related order.
