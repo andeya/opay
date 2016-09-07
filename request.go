@@ -76,7 +76,7 @@ func (req *Request) validate(engine *Engine) error {
 	}
 
 	// 检查是否为重复处理行为
-	if req.Initiator.TargetAction() == req.Initiator.LastAction() {
+	if req.Initiator.TargetAction() == req.Initiator.RecentAction() {
 		return ErrReprocess
 	}
 
@@ -86,12 +86,12 @@ func (req *Request) validate(engine *Engine) error {
 	}
 
 	// 检查处理行为是否超出范围
-	if !actions[req.Initiator.TargetAction()] || !actions[req.Initiator.LastAction()] {
+	if !actions[req.Initiator.TargetAction()] || !actions[req.Initiator.RecentAction()] {
 		return ErrInvalidAction
 	}
 
 	// 非待处理状态的订单不可撤销
-	if req.Initiator.TargetAction() == CANCEL && req.Initiator.LastAction() != PEND {
+	if req.Initiator.TargetAction() == CANCEL && req.Initiator.RecentAction() != PEND {
 		return ErrCancelAction
 	}
 
@@ -111,7 +111,7 @@ func (req *Request) validate(engine *Engine) error {
 		if req.Stakeholder.TargetAction() != UNSET {
 			// 检查主从订单行为是否一致
 			if req.Stakeholder.TargetAction() != req.Initiator.TargetAction() ||
-				req.Stakeholder.LastAction() != req.Initiator.LastAction() {
+				req.Stakeholder.RecentAction() != req.Initiator.RecentAction() {
 				return ErrDifferentAction
 			}
 		}

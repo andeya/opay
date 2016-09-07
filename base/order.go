@@ -100,7 +100,7 @@ func (this *BaseOrder) TargetAction() opay.Action {
 }
 
 // Get the most recent Action, the default value is UNSET==0.
-func (this *BaseOrder) LastAction() opay.Action {
+func (this *BaseOrder) RecentAction() opay.Action {
 	return OrderAction(this.Type, this.lastStatus)
 }
 

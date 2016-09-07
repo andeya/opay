@@ -16,7 +16,7 @@ type (
 		TargetAction() Action
 
 		// Get the most recent Action, the default value is UNSET==0.
-		LastAction() Action
+		RecentAction() Action
 
 		// Get user's id.
 		GetUid() string
