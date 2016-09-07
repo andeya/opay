@@ -9,6 +9,12 @@ import (
 type (
 	// Operation interface of order.
 	IOrder interface {
+		// Specify the handler of dealing.
+		Operator() string
+
+		// Get the target Action.
+		TargetAction() Action
+
 		// Get the most recent Action, the default value is UNSET==0.
 		LastAction() Action
 
@@ -67,7 +73,8 @@ var (
 		SYNC_DEAL: true,
 	}
 
-	ErrInvalidAction   = errors.New("Invalid Action.")
-	ErrReprocess       = errors.New("Repeat process order.")
-	ErrDifferentAction = errors.New("Initiator's Action and Stakeholder must be same.")
+	ErrInvalidAction     = errors.New("Invalid Action.")
+	ErrReprocess         = errors.New("Repeat process order.")
+	ErrDifferentOperator = errors.New("Initiator's Operator and Stakeholder must be same.")
+	ErrDifferentAction   = errors.New("Initiator's Action and Stakeholder must be same.")
 )

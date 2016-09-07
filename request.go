@@ -10,15 +10,15 @@ import (
 )
 
 type Request struct {
-	Key         string                 //the specified handler
-	Action      Action                 //the specified handler's action
 	Deadline    time.Time              //handle timeouts, if do not fill, no limit
+	Values      map[string]interface{} //addition params
 	Initiator   IOrder                 //master order
 	Stakeholder IOrder                 //the optional, slave order
-	Values      map[string]interface{} //addition params
 	response    *Response
 	respChan    chan<- Response //result signal
 	*sqlx.Tx                    //the optional, database transaction
+	operator    string
+	action      Action
 	done        bool
 	lock        sync.RWMutex
 }
@@ -29,27 +29,24 @@ var (
 	ErrIncorrectAmount     = errors.New("Account operation amount is incorrect.")
 )
 
-// 检查处理行为Action是否合法
-func (req *Request) ValidateAction() error {
-	// 检查是否超出Action范围
-	if !actions[req.Action] {
-		return ErrInvalidAction
-	}
+// 获取指定的订单处理操作符
+func (req *Request) Operator() string {
+	req.lock.RLock()
+	defer req.lock.RUnlock()
+	return req.operator
+}
 
-	// 检查是否为重复处理
-	if req.Initiator.LastAction() == req.Action {
-		return ErrReprocess
-	}
-	if req.Stakeholder != nil {
-		if req.Stakeholder.LastAction() == req.Action {
-			return ErrDifferentAction
-		}
-	}
-	return nil
+// 获取订单处理的行为目标
+func (req *Request) Action() Action {
+	req.lock.RLock()
+	defer req.lock.RUnlock()
+	return req.action
 }
 
 // Prepare the request.
-func (req *Request) prepare(a Accuracy) (respChan <-chan Response, err error) {
+func (req *Request) prepare(engine *Engine) (respChan <-chan Response, err error) {
+	req.lock.Lock()
+	defer req.lock.Unlock()
 	req.done = false
 	if req.Values == nil {
 		req.Values = make(map[string]interface{})
@@ -58,28 +55,67 @@ func (req *Request) prepare(a Accuracy) (respChan <-chan Response, err error) {
 	c := make(chan Response)
 	req.respChan = (chan<- Response)(c)
 	respChan = (<-chan Response)(c)
-
-	if req.Initiator == nil {
-		err = errors.New("Request.Initiator Can not be nil.")
-		return
+	err = req.validate(engine)
+	if err == nil {
+		req.operator = req.Initiator.Operator()
+		req.action = req.Initiator.TargetAction()
 	}
-
-	if a.Equal(req.Initiator.GetAmount(), 0) {
-		err = ErrIncorrectAmount
-		return
-	}
-
-	if req.Stakeholder != nil && a.Equal(req.Stakeholder.GetAmount(), 0) {
-		err = ErrIncorrectAmount
-	}
-
 	return
+}
+
+// 检查请求的合法性
+func (req *Request) validate(engine *Engine) error {
+	// The main order can not be empty.
+	if req.Initiator == nil {
+		return errors.New("Request.Initiator Can not be nil.")
+	}
+
+	// 检查操作是否存在
+	if err := engine.CheckOperator(req.Initiator.Operator()); err != nil {
+		return err
+	}
+
+	// 检查是否为重复处理行为
+	if req.Initiator.TargetAction() == req.Initiator.LastAction() {
+		return ErrReprocess
+	}
+
+	// 检查处理行为是否超出范围
+	if !actions[req.Initiator.TargetAction()] || !actions[req.Initiator.LastAction()] {
+		return ErrInvalidAction
+	}
+
+	// 主订单操作金额不能为0
+	if engine.Equal(req.Initiator.GetAmount(), 0) {
+		return ErrIncorrectAmount
+	}
+
+	// 检查从订单
+	if req.Stakeholder != nil {
+		// 检查主从订单操作是否一致
+		if req.Stakeholder.Operator() != req.Initiator.Operator() {
+			return ErrDifferentOperator
+		}
+
+		// 检查主从订单行为是否一致
+		if req.Stakeholder.TargetAction() != req.Initiator.TargetAction() ||
+			req.Stakeholder.LastAction() != req.Initiator.LastAction() {
+			return ErrDifferentAction
+		}
+
+		// 从订单操作金额不能为0
+		if engine.Equal(req.Stakeholder.GetAmount(), 0) {
+			return ErrIncorrectAmount
+		}
+	}
+
+	return nil
 }
 
 // Write response body.
 func (req *Request) write(k string, v interface{}) {
-	req.lock.RLock()
-	defer req.lock.RUnlock()
+	req.lock.Lock()
+	defer req.lock.Unlock()
 	if req.done {
 		log.Println("As it has been submitted, it can not be written.")
 		return
@@ -106,5 +142,7 @@ func (req *Request) writeback() {
 }
 
 func (req *Request) isNil() bool {
+	req.lock.RLock()
+	defer req.lock.RUnlock()
 	return req.response == nil
 }

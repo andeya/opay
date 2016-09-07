@@ -32,12 +32,12 @@ type (
 )
 
 // 注册订单处理接口
-func (mux *ServeMux) Handle(key string, handler Handler) error {
+func (mux *ServeMux) Handle(operator string, handler Handler) error {
 	mux.mu.Lock()
 	defer mux.mu.Unlock()
-	_, ok := mux.m[key]
+	_, ok := mux.m[operator]
 	if ok {
-		return errors.New("Handler \"" + key + "\" has been registered.")
+		return errors.New("Handler \"" + operator + "\" has been registered.")
 	}
 
 	v := reflect.ValueOf(handler)
@@ -50,19 +50,19 @@ func (mux *ServeMux) Handle(key string, handler Handler) error {
 		return errors.New("Handler must be func or struct type.")
 	}
 
-	mux.m[key] = v
+	mux.m[operator] = v
 	return nil
 }
 
 // 注册订单处理接口
-func (mux *ServeMux) HandleFunc(key string, fn func(*Context) error) error {
-	return mux.Handle(key, HandlerFunc(fn))
+func (mux *ServeMux) HandleFunc(operator string, fn func(*Context) error) error {
+	return mux.Handle(operator, HandlerFunc(fn))
 }
 
 // 通过路由执行订单处理
 func (mux *ServeMux) serve(ctx *Context) error {
 	mux.mu.RLock()
-	v, ok := mux.m[ctx.Request.Key]
+	v, ok := mux.m[ctx.Operator()]
 	mux.mu.RUnlock()
 
 	if !ok {
@@ -76,17 +76,28 @@ func (mux *ServeMux) serve(ctx *Context) error {
 	return v.Interface().(Handler).ServeOpay(ctx)
 }
 
+// 检查指定操作符是否存在
+func (mux *ServeMux) CheckOperator(operator string) error {
+	mux.mu.RLock()
+	_, ok := mux.m[operator]
+	mux.mu.RUnlock()
+	if !ok {
+		return errors.New("Not Found Handler")
+	}
+	return nil
+}
+
 // 订单操作接口的全局路由
 var globalServeMux = &ServeMux{
 	m: make(map[string]reflect.Value),
 }
 
 // 向全局路由注册订单处理接口
-func Handle(key string, handler Handler) error {
-	return globalServeMux.Handle(key, handler)
+func Handle(operator string, handler Handler) error {
+	return globalServeMux.Handle(operator, handler)
 }
 
 // 向全局路由注册订单处理接口
-func HandleFunc(key string, handler func(*Context) error) error {
-	return globalServeMux.HandleFunc(key, handler)
+func HandleFunc(operator string, handler func(*Context) error) error {
+	return globalServeMux.HandleFunc(operator, handler)
 }

@@ -13,14 +13,13 @@ type (
 		SetCap(int)
 		Push(Request) (respChan <-chan Response, err error)
 		Pull() Request
-		SetAccuracy(Accuracy)
-		GetAccuracy() Accuracy
+		GetEngine() *Engine
 	}
 
 	OrderChan struct {
-		c        chan Request
-		mu       sync.RWMutex
-		accuracy Accuracy
+		c      chan Request
+		mu     sync.RWMutex
+		engine *Engine
 	}
 )
 
@@ -28,12 +27,13 @@ const (
 	DEFAULT_QUEUE_CAP = 1024 //队列默认容量
 )
 
-func newOrderChan(queueCapacity int) Queue {
+func newOrderChan(queueCapacity int, engine *Engine) Queue {
 	if queueCapacity <= 0 {
 		queueCapacity = DEFAULT_QUEUE_CAP
 	}
 	return &OrderChan{
-		c: make(chan Request, queueCapacity),
+		c:      make(chan Request, queueCapacity),
+		engine: engine,
 	}
 }
 
@@ -61,7 +61,7 @@ func (oc *OrderChan) Push(req Request) (respChan <-chan Response, err error) {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
-	respChan, err = req.prepare(oc.GetAccuracy())
+	respChan, err = req.prepare(oc.GetEngine())
 	if err != nil {
 		req.setError(err)
 		req.writeback()
@@ -126,14 +126,8 @@ func (oc *OrderChan) Pull() Request {
 	return req
 }
 
-func (oc *OrderChan) GetAccuracy() Accuracy {
+func (oc *OrderChan) GetEngine() *Engine {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
-	return oc.accuracy
-}
-
-func (oc *OrderChan) SetAccuracy(a Accuracy) {
-	oc.mu.Lock()
-	oc.accuracy = a
-	oc.mu.Unlock()
+	return oc.engine
 }

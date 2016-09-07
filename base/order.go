@@ -89,43 +89,19 @@ func NewBaseOrder(
 	return o
 }
 
-// set order id, 32bytes(time23+type3+random6)
-func (this *BaseOrder) SetNewId() *BaseOrder {
-	this.Id = CreateOrderid(this.Type)
-	return this
+// Specify the handler of dealing.
+func (this *BaseOrder) Operator() string {
+	return OrderOperator(this.Type)
 }
 
-// Binding the order and it's related order.
-func (this *BaseOrder) Link(related *BaseOrder) {
-	this.LinkId, related.LinkId = related.Id, this.Id
-}
-
-// Get details of the bytes format.
-func (this *BaseOrder) DetailsBytes() []byte {
-	if this.detailsBytes == nil {
-		if this.Details == nil {
-			this.Details = []*Detail{}
-		}
-		this.detailsBytes, _ = json.Marshal(this.Details)
-	}
-
-	return this.detailsBytes
-}
-
-// Rollback order status and detail in memory after dealing failure.
-func (this *BaseOrder) Rollback() *BaseOrder {
-	count := len(this.Details)
-	if count > 0 && this.Details[count-1].Status == this.Status {
-		this.Details = this.Details[:count-1]
-	}
-	this.detailsBytes = nil
-	this.Status = this.lastStatus
-	return this
+// Get the target Action.
+func (this *BaseOrder) TargetAction() opay.Action {
+	return OrderAction(this.Type, this.Status)
 }
 
 // Get the most recent Action, the default value is UNSET==0.
 func (this *BaseOrder) LastAction() opay.Action {
-	return opay.Action(this.lastStatus)
+	return OrderAction(this.Type, this.lastStatus)
 }
 
 // Get user's id.
@@ -174,6 +150,40 @@ func (this *BaseOrder) SyncDeal(tx *sqlx.Tx, values opay.Values) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing SyncDeal method).")
 }
 
+// set order id, 32bytes(time23+type3+random6)
+func (this *BaseOrder) SetNewId() *BaseOrder {
+	this.Id = CreateOrderid(this.Type)
+	return this
+}
+
+// Binding the order and it's related order.
+func (this *BaseOrder) Link(related *BaseOrder) {
+	this.LinkId, related.LinkId = related.Id, this.Id
+}
+
+// Get details of the bytes format.
+func (this *BaseOrder) DetailsBytes() []byte {
+	if this.detailsBytes == nil {
+		if this.Details == nil {
+			this.Details = []*Detail{}
+		}
+		this.detailsBytes, _ = json.Marshal(this.Details)
+	}
+
+	return this.detailsBytes
+}
+
+// Rollback order status and detail in memory after dealing failure.
+func (this *BaseOrder) Rollback() *BaseOrder {
+	count := len(this.Details)
+	if count > 0 && this.Details[count-1].Status == this.Status {
+		this.Details = this.Details[:count-1]
+	}
+	this.detailsBytes = nil
+	this.Status = this.lastStatus
+	return this
+}
+
 // Get the order's id.
 func (this *BaseOrder) GetId() string {
 	return this.Id
@@ -186,7 +196,7 @@ func (this *BaseOrder) GetType() uint8 {
 
 // Get status text.
 func (this *BaseOrder) GetStatusText() string {
-	return GetStatusText(this.Type, this.Status)
+	return OrderStatusText(this.Type, this.Status)
 }
 
 // Get the order's summary.

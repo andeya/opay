@@ -11,16 +11,6 @@ type Context struct {
 	Accuracy
 }
 
-// 获取指定处理类型
-func (ctx *Context) Key() string {
-	return ctx.Request.Key
-}
-
-// 获取指定订单处理行为
-func (ctx *Context) Action() Action {
-	return ctx.Request.Action
-}
-
 // 获取处理超时，不填则不限时
 func (ctx *Context) Deadline() time.Time {
 	return ctx.Request.Deadline

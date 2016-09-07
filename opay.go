@@ -34,11 +34,10 @@ func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Engine {
 	engine := &Engine{
 		SettleFuncMap: globalSettleFuncMap,
 		ServeMux:      globalServeMux,
-		queue:         newOrderChan(queueCapacity),
 		db:            db,
 		Accuracy:      func() float64 { return accuracyFloat64 },
 	}
-	engine.queue.SetAccuracy(engine.Accuracy)
+	engine.queue = newOrderChan(queueCapacity, engine)
 	return engine
 }
 
@@ -53,13 +52,6 @@ func (engine *Engine) Serve() {
 		req := engine.queue.Pull()
 
 		var err error
-
-		// 检查处理行为Action是否合法
-		if err = req.ValidateAction(); err != nil {
-			req.setError(err)
-			req.writeback()
-			continue
-		}
 
 		// 获取相应资产类型的账户余额操作函数
 		var (
