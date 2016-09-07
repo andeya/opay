@@ -18,7 +18,7 @@ type (
 	// Order base model
 	BaseOrder struct {
 		Id        string `json:"id" db:"id"`
-		LinkAidId string `json:"link_aid_id" db:"link_aid_id"`
+		LinkIdAid string `json:"link_id_aid" db:"link_id_aid"`
 		Aid       string `json:"aid" db:"aid"`   //asset id
 		Uid       string `json:"uid" db:"uid"`   //user id
 		Type      uint8  `json:"type" db:"type"` //order type
@@ -174,15 +174,15 @@ func (this *BaseOrder) SetTarget(targetStatus int32, note string, ip string) err
 
 // Binding the order and it's related order.
 func (this *BaseOrder) Link(related *BaseOrder) {
-	this.LinkAidId, related.LinkAidId = related.Aid+"|"+related.Id, this.Aid+"|"+this.Id
+	this.LinkIdAid, related.LinkIdAid = related.Id+"|"+related.Aid, this.Id+"|"+this.Aid
 }
 
-// Get the related order's 'aid' and 'id'.
-func (this *BaseOrder) SplitLink() (aid, id string) {
-	if len(this.LinkAidId) == 0 {
-		return this.Aid, ""
+// Get the related order's 'id' and 'aid'.
+func (this *BaseOrder) SplitLink() (id, aid string) {
+	if len(this.LinkIdAid) == 0 {
+		return "", this.Aid
 	}
-	a := strings.Split(this.LinkAidId, "|")
+	a := strings.Split(this.LinkIdAid, "|")
 	if len(a) != 2 {
 		return "", ""
 	}
