@@ -90,20 +90,23 @@ func (req *Request) validate(engine *Engine) error {
 		return ErrIncorrectAmount
 	}
 
-	// 检查从订单
+	// 检查从属订单
 	if req.Stakeholder != nil {
 		// 检查主从订单操作是否一致
 		if req.Stakeholder.Operator() != req.Initiator.Operator() {
 			return ErrDifferentOperator
 		}
 
-		// 检查主从订单行为是否一致
-		if req.Stakeholder.TargetAction() != req.Initiator.TargetAction() ||
-			req.Stakeholder.LastAction() != req.Initiator.LastAction() {
-			return ErrDifferentAction
+		// 允许从属订单不设定目标行为
+		if req.Stakeholder.TargetAction() != UNSET {
+			// 检查主从订单行为是否一致
+			if req.Stakeholder.TargetAction() != req.Initiator.TargetAction() ||
+				req.Stakeholder.LastAction() != req.Initiator.LastAction() {
+				return ErrDifferentAction
+			}
 		}
 
-		// 从订单操作金额不能为0
+		// 从属订单操作金额不能为0
 		if engine.Equal(req.Stakeholder.GetAmount(), 0) {
 			return ErrIncorrectAmount
 		}
