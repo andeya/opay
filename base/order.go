@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -16,11 +17,11 @@ import (
 type (
 	// Order base model
 	BaseOrder struct {
-		Id     string `json:"id" db:"id"`
-		LinkId string `json:"link_id" db:"link_id"`
-		Aid    string `json:"aid" db:"aid"`   //asset id
-		Uid    string `json:"uid" db:"uid"`   //user id
-		Type   uint8  `json:"type" db:"type"` //order type
+		Id        string `json:"id" db:"id"`
+		LinkAidId string `json:"link_aid_id" db:"link_aid_id"`
+		Aid       string `json:"aid" db:"aid"`   //asset id
+		Uid       string `json:"uid" db:"uid"`   //user id
+		Type      uint8  `json:"type" db:"type"` //order type
 		//the amount of change for the Uid-Aid account, balance of positive and negative representation
 		Amount       float64 `json:"amount" db:"amount"`
 		Summary      string  `json:"summary" db:"summary"`
@@ -173,7 +174,19 @@ func (this *BaseOrder) SetTarget(targetStatus int32, note string, ip string) err
 
 // Binding the order and it's related order.
 func (this *BaseOrder) Link(related *BaseOrder) {
-	this.LinkId, related.LinkId = related.Id, this.Id
+	this.LinkAidId, related.LinkAidId = related.Aid+"|"+related.Id, this.Aid+"|"+this.Id
+}
+
+// Get the related order's 'aid' and 'id'.
+func (this *BaseOrder) SplitLink() (aid, id string) {
+	if len(this.LinkAidId) == 0 {
+		return this.Aid, ""
+	}
+	a := strings.Split(this.LinkAidId, "|")
+	if len(a) != 2 {
+		return "", ""
+	}
+	return a[0], a[1]
 }
 
 // Get details of the bytes format.
