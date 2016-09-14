@@ -34,6 +34,4 @@ Opay 以订单为主线、面向接口开发的在线支付通用模块。
 
 5. 开启服务协程 go opay.Serve()
 
-6. 推送订单 done, err:=opay.Push(Request{})
-
-7. 使用 <-done 等待订单处理结束
+6. 请求处理订单 resp:=opay.Do(Request{})
