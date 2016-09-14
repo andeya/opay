@@ -11,7 +11,7 @@ import (
 
 type Request struct {
 	Deadline    time.Time              //handle timeouts, if do not fill, no limit
-	Values      map[string]interface{} //addition params
+	Additional  map[string]interface{} //addition params
 	Initiator   IOrder                 //master order
 	Stakeholder IOrder                 //the optional, slave order
 	response    *Response
@@ -48,10 +48,10 @@ func (req *Request) prepare(engine *Engine) (respChan <-chan Response, err error
 	req.lock.Lock()
 	defer req.lock.Unlock()
 	req.done = false
-	if req.Values == nil {
-		req.Values = make(map[string]interface{})
+	if req.Additional == nil {
+		req.Additional = make(map[string]interface{})
 	}
-	req.response = &Response{Values: req.Values}
+	req.response = &Response{Values: req.Additional}
 	c := make(chan Response)
 	req.respChan = (chan<- Response)(c)
 	respChan = (<-chan Response)(c)
