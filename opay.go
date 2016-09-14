@@ -115,7 +115,7 @@ func (engine *Engine) Serve() {
 }
 
 // 推送请求到引擎进行处理
-func (engine *Engine) Push(req Request) (respChan <-chan Response, err error) {
+func (engine *Engine) Push(req Request) (respChan <-chan Response) {
 	return engine.queue.Push(req)
 }
 

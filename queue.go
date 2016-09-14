@@ -11,7 +11,7 @@ type (
 	// 订单队列
 	Queue interface {
 		SetCap(int)
-		Push(Request) (respChan <-chan Response, err error)
+		Push(Request) (respChan <-chan Response)
 		Pull() Request
 		GetEngine() *Engine
 	}
@@ -57,11 +57,11 @@ func (oc *OrderChan) SetCap(queueCapacity int) {
 }
 
 // 推送一条订单
-func (oc *OrderChan) Push(req Request) (respChan <-chan Response, err error) {
+func (oc *OrderChan) Push(req Request) (respChan <-chan Response) {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
-	respChan, err = req.prepare(oc.GetEngine())
+	respChan, err := req.prepare(oc.GetEngine())
 	if err != nil {
 		req.setError(err)
 		req.writeback()
