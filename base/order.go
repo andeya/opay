@@ -248,26 +248,26 @@ func (this *BaseOrder) GetCreatedAt() int64 {
 }
 
 var (
-	_ sql.Scanner   = new(Details)
-	_ driver.Valuer = new(Details)
+	_ sql.Scanner   = Details{}
+	_ driver.Valuer = Details{}
 )
 
 // Scan implements the sql Scanner interface.
-func (this *Details) Scan(value interface{}) error {
+func (this Details) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
 	s, ok := value.(string)
 	if !ok {
-		return errors.New("cannot convert 'details' to type 'Details'.")
+		return errors.New("Cannot convert 'details' to type 'Details'.")
 	}
 	x := (*[2]uintptr)(unsafe.Pointer(&s))
 	h := [3]uintptr{x[0], x[1], x[1]}
-	return json.Unmarshal(*(*[]byte)(unsafe.Pointer(&h)), this)
+	return json.Unmarshal(*(*[]byte)(unsafe.Pointer(&h)), &this)
 }
 
 // Value implements the driver Valuer interface.
-func (this *Details) Value() (driver.Value, error) {
+func (this Details) Value() (driver.Value, error) {
 	b, err := json.Marshal(this)
 	return *(*string)(unsafe.Pointer(&b)), err
 }

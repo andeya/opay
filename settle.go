@@ -23,7 +23,7 @@ func (this *SettleFuncMap) GetSettleFunc(aid string) (SettleFunc, error) {
 	acc, ok := this.m[aid]
 	this.mu.RUnlock()
 	if !ok {
-		return nil, errors.New("Not Found SettleFunc \"" + aid + "\".")
+		return nil, errors.New("Not found SettleFunc '" + aid + "'.")
 	}
 	return acc, nil
 }
@@ -35,7 +35,7 @@ func (this *SettleFuncMap) RegSettleFunc(aid string, fn SettleFunc) error {
 	defer this.mu.Unlock()
 	_, ok := this.m[aid]
 	if ok {
-		return errors.New("SettleFunc \"" + aid + "\" has been registered.")
+		return errors.New("SettleFunc '" + aid + "' has been registered.")
 	}
 	this.m[aid] = fn
 	return nil
@@ -56,5 +56,5 @@ func RegSettleFunc(aid string, acc SettleFunc) error {
 
 // Empty Settle Function of empty asset.
 func emptySettle(uid string, amount float64, tx *sqlx.Tx, values Values) error {
-	return errors.New("Empty Settle Function.")
+	return errors.New("Empty settle function.")
 }

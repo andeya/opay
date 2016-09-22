@@ -26,7 +26,7 @@ func BindOrderOperator(typ uint8, operator string) {
 	if _, ok := orderMetaInfos.operator[typ]; !ok {
 		orderMetaInfos.operator[typ] = operator
 	} else {
-		log.Printf("Repeat binding order operator: %d - %s\n", typ, operator)
+		log.Printf("repeat binding order operator: %d - %s\n", typ, operator)
 	}
 }
 
@@ -42,7 +42,7 @@ func BindOrderAboutStatus(typ uint8, status int32, action opay.Action, text stri
 		orderMetaInfos.text[typ][status] = text
 		orderMetaInfos.action[typ][status] = action
 	} else {
-		log.Printf("Repeat binding order status information: %d - %d - %d - %s\n", typ, status, action, text)
+		log.Printf("repeat binding order status information: %d - %d - %d - %s\n", typ, status, action, text)
 	}
 }
 
