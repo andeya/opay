@@ -256,6 +256,7 @@ var (
 // Scan implements the sql Scanner interface.
 func (this *Details) Scan(value interface{}) error {
 	if value == nil {
+		*this = Details{}
 		return nil
 	}
 	v, ok := value.([]byte)
