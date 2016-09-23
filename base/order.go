@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -248,26 +249,27 @@ func (this *BaseOrder) GetCreatedAt() int64 {
 }
 
 var (
-	_ sql.Scanner   = Details{}
-	_ driver.Valuer = Details{}
+	_ sql.Scanner   = &Details{}
+	_ driver.Valuer = &Details{}
 )
 
 // Scan implements the sql Scanner interface.
-func (this Details) Scan(value interface{}) error {
+func (this *Details) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
-	s, ok := value.(string)
+	v, ok := value.([]uint8)
 	if !ok {
-		return errors.New("Cannot convert 'details' to type 'Details'.")
+		return fmt.Errorf("Cannot convert 'details' type %T to type 'Details'.", value)
 	}
-	x := (*[2]uintptr)(unsafe.Pointer(&s))
-	h := [3]uintptr{x[0], x[1], x[1]}
-	return json.Unmarshal(*(*[]byte)(unsafe.Pointer(&h)), &this)
+	// debug
+	// println(string(([]byte)(v)))
+
+	return json.Unmarshal(([]byte)(v), this)
 }
 
 // Value implements the driver Valuer interface.
-func (this Details) Value() (driver.Value, error) {
+func (this *Details) Value() (driver.Value, error) {
 	b, err := json.Marshal(this)
 	return *(*string)(unsafe.Pointer(&b)), err
 }
