@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -257,7 +258,13 @@ func (this *Details) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
-	return json.Unmarshal(value.([]byte), this)
+	v, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("Cannot convert 'details' type %T to type 'Details'.", value)
+	}
+	// debug
+	// println(string(([]byte)(v)))
+	return json.Unmarshal(v, this)
 }
 
 // Value implements the driver Valuer interface.
