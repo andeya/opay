@@ -1,6 +1,7 @@
 package base
 
 import (
+	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
@@ -24,13 +25,13 @@ type (
 		Uid       string `json:"uid" db:"uid"`   //user id
 		Type      uint8  `json:"type" db:"type"` //order type
 		//the amount of change for the Uid-Aid account, balance of positive and negative representation
-		Amount       float64 `json:"amount" db:"amount"`
-		Summary      string  `json:"summary" db:"summary"`
-		Details      Details `json:"details" db:"details"`
-		detailsBytes []byte
-		recentStatus int32 //the most recent status
-		Status       int32 `json:"status" db:"status"` //the target status
-		CreatedAt    int64 `json:"created_at" db:"created_at"`
+		Amount        float64 `json:"amount" db:"amount"`
+		Summary       string  `json:"summary" db:"summary"`
+		Details       Details `json:"details" db:"details"`
+		detailsString string
+		recentStatus  int32 //the most recent status
+		Status        int32 `json:"status" db:"status"` //the target status
+		CreatedAt     int64 `json:"created_at" db:"created_at"`
 
 		err  error //processing error
 		lock sync.RWMutex
@@ -190,16 +191,13 @@ func (this *BaseOrder) SplitLink() (id, aid string) {
 	return a[0], a[1]
 }
 
-// Get details of the bytes format.
-func (this *BaseOrder) DetailsBytes() []byte {
-	if this.detailsBytes == nil {
-		if this.Details == nil {
-			this.Details = []*Detail{}
-		}
-		this.detailsBytes, _ = json.Marshal(this.Details)
+// Get details of the json string format.
+func (this *BaseOrder) DetailsString() string {
+	if len(this.detailsString) == 0 {
+		s, _ := this.Details.Value()
+		this.detailsString = s.(string)
 	}
-
-	return this.detailsBytes
+	return this.detailsString
 }
 
 // Rollback order status and detail in memory after dealing failure.
@@ -208,7 +206,7 @@ func (this *BaseOrder) Rollback() *BaseOrder {
 	if count > 0 && this.Details[count-1].Status == this.Status {
 		this.Details = this.Details[:count-1]
 	}
-	this.detailsBytes = nil
+	this.detailsString = ""
 	this.Status = this.recentStatus
 	return this
 }
@@ -263,6 +261,7 @@ func (this *Details) Scan(value interface{}) error {
 	if !ok {
 		return fmt.Errorf("Cannot convert 'details' type %T to type 'Details'.", value)
 	}
+	v = bytes.Replace(v, []byte(`\'`), []byte(`'`), -1)
 	// debug
 	// println(string(([]byte)(v)))
 	return json.Unmarshal(v, this)
@@ -270,6 +269,12 @@ func (this *Details) Scan(value interface{}) error {
 
 // Value implements the driver Valuer interface.
 func (this *Details) Value() (driver.Value, error) {
+	if this == nil {
+		*this = Details{}
+	}
 	b, err := json.Marshal(this)
+	// debug
+	// println(string(([]byte)(b)))
+	b = bytes.Replace(b, []byte(`\`), []byte(`\\`), -1)
 	return *(*string)(unsafe.Pointer(&b)), err
 }
