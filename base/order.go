@@ -253,7 +253,7 @@ var (
 
 // Scan implements the sql Scanner interface.
 func (this *Details) Scan(value interface{}) error {
-	if value == nil {
+	if value == nil && this != nil {
 		*this = Details{}
 		return nil
 	}
@@ -270,7 +270,7 @@ func (this *Details) Scan(value interface{}) error {
 // Value implements the driver Valuer interface.
 func (this *Details) Value() (driver.Value, error) {
 	if this == nil {
-		*this = Details{}
+		return "[]", nil
 	}
 	b, err := json.Marshal(this)
 	// debug
