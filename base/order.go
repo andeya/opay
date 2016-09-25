@@ -1,7 +1,6 @@
 package base
 
 import (
-	// "bytes"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
@@ -253,15 +252,16 @@ var (
 
 // Scan implements the sql Scanner interface.
 func (this *Details) Scan(value interface{}) error {
-	if value == nil && this != nil {
-		*this = Details{}
-		return nil
-	}
 	v, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("Cannot convert 'details' type %T to type 'Details'.", value)
 	}
-	// v = bytes.Replace(v, []byte(`\'`), []byte(`'`), -1)
+	if len(v) == 0 {
+		if this != nil {
+			*this = Details{}
+		}
+		return nil
+	}
 	// debug
 	// println(string(([]byte)(v)))
 	return json.Unmarshal(v, this)
@@ -275,6 +275,5 @@ func (this *Details) Value() (driver.Value, error) {
 	b, err := json.Marshal(this)
 	// debug
 	// println(string(([]byte)(b)))
-	// b = bytes.Replace(b, []byte(`\`), []byte(`\\`), -1)
 	return *(*string)(unsafe.Pointer(&b)), err
 }
