@@ -57,12 +57,24 @@ func OrderOperator(typ uint8) string {
 func OrderAction(typ uint8, status int32) opay.Action {
 	orderMetaInfos.lock.RLock()
 	defer orderMetaInfos.lock.RUnlock()
-	return orderMetaInfos.action[typ][status]
+	a, ok := orderMetaInfos.action[typ]
+	if !ok {
+		return opay.UNSET
+	}
+	b, ok := a[status]
+	if !ok {
+		return opay.UNSET
+	}
+	return b
 }
 
 // 获取订单类型的状态文本描述
 func OrderStatusText(typ uint8, status int32) string {
 	orderMetaInfos.lock.RLock()
 	defer orderMetaInfos.lock.RUnlock()
-	return orderMetaInfos.text[typ][status]
+	a, ok := orderMetaInfos.text[typ]
+	if !ok {
+		return ""
+	}
+	return a[status]
 }

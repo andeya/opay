@@ -5,31 +5,40 @@ import (
 )
 
 type (
-	Values interface {
+	CtxStore interface {
+		Param(k string) (v interface{}, ok bool)
 		Set(k string, v interface{})
 		Get(k string) (v interface{}, ok bool)
 	}
 
 	// The result of dealing request.
 	Response struct {
-		Values map[string]interface{}
-		Err    error
-		lock   sync.RWMutex
+		addition map[string]interface{}
+		Result   map[string]interface{}
+		Err      error
+		lock     sync.RWMutex
 	}
 )
 
-var _ Values = new(Response)
+var _ CtxStore = new(Response)
+
+func (resp *Response) Param(k string) (interface{}, bool) {
+	resp.lock.RLock()
+	defer resp.lock.RUnlock()
+	v, ok := resp.addition[k]
+	return v, ok
+}
 
 func (resp *Response) Set(k string, v interface{}) {
 	resp.lock.Lock()
-	resp.Values[k] = v
+	resp.Result[k] = v
 	resp.lock.Unlock()
 }
 
 func (resp *Response) Get(k string) (interface{}, bool) {
 	resp.lock.RLock()
 	defer resp.lock.RUnlock()
-	v, ok := resp.Values[k]
+	v, ok := resp.Result[k]
 	return v, ok
 }
 

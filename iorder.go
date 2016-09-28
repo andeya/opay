@@ -29,22 +29,22 @@ type (
 		GetAmount() float64
 
 		// Async execution, and mark pending.
-		ToPend(tx *sqlx.Tx, values Values) error
+		ToPend(*sqlx.Tx, CtxStore) error
 
 		// Async execution, and mark the doing.
-		ToDo(tx *sqlx.Tx, values Values) error
+		ToDo(*sqlx.Tx, CtxStore) error
 
 		// Async execution, and mark the successful.
-		ToSucceed(tx *sqlx.Tx, values Values) error
+		ToSucceed(*sqlx.Tx, CtxStore) error
 
 		// Async execution, and mark canceled.
-		ToCancel(tx *sqlx.Tx, values Values) error
+		ToCancel(*sqlx.Tx, CtxStore) error
 
 		// Async execution, and mark failure.
-		ToFail(tx *sqlx.Tx, values Values) error
+		ToFail(*sqlx.Tx, CtxStore) error
 
 		// Sync execution, and mark the successful.
-		SyncDeal(tx *sqlx.Tx, values Values) error
+		SyncDeal(*sqlx.Tx, CtxStore) error
 	}
 
 	// handling order's action

@@ -8,7 +8,7 @@ import (
 )
 
 // 账户余额操作函数
-type SettleFunc func(uid string, amount float64, tx *sqlx.Tx, values Values) error
+type SettleFunc func(uid string, amount float64, tx *sqlx.Tx, ctxStore CtxStore) error
 
 // 账户余额操作函数路由
 type SettleFuncMap struct {
@@ -55,6 +55,6 @@ func RegSettleFunc(aid string, acc SettleFunc) error {
 }
 
 // Empty Settle Function of empty asset.
-func emptySettle(uid string, amount float64, tx *sqlx.Tx, values Values) error {
+func emptySettle(uid string, amount float64, tx *sqlx.Tx, ctxStore CtxStore) error {
 	return errors.New("Empty settle function.")
 }

@@ -117,32 +117,32 @@ func (this *BaseOrder) GetAmount() float64 {
 }
 
 // Async execution, and mark pending.
-func (this *BaseOrder) ToPend(tx *sqlx.Tx, values opay.Values) error {
+func (this *BaseOrder) ToPend(tx *sqlx.Tx, ctxStore opay.CtxStore) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToPend method).")
 }
 
 // Async execution, and mark the doing.
-func (this *BaseOrder) ToDo(tx *sqlx.Tx, values opay.Values) error {
+func (this *BaseOrder) ToDo(tx *sqlx.Tx, ctxStore opay.CtxStore) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToDo method).")
 }
 
 // Async execution, and mark the successful.
-func (this *BaseOrder) ToSucceed(tx *sqlx.Tx, values opay.Values) error {
+func (this *BaseOrder) ToSucceed(tx *sqlx.Tx, ctxStore opay.CtxStore) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToSucceed method).")
 }
 
 // Async execution, and mark canceled.
-func (this *BaseOrder) ToCancel(tx *sqlx.Tx, values opay.Values) error {
+func (this *BaseOrder) ToCancel(tx *sqlx.Tx, ctxStore opay.CtxStore) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToCancel method).")
 }
 
 // Async execution, and mark failure.
-func (this *BaseOrder) ToFail(tx *sqlx.Tx, values opay.Values) error {
+func (this *BaseOrder) ToFail(tx *sqlx.Tx, ctxStore opay.CtxStore) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing ToFail method).")
 }
 
 // Sync execution, and mark the successful.
-func (this *BaseOrder) SyncDeal(tx *sqlx.Tx, values opay.Values) error {
+func (this *BaseOrder) SyncDeal(tx *sqlx.Tx, ctxStore opay.CtxStore) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing SyncDeal method).")
 }
 
@@ -167,6 +167,13 @@ func (this *BaseOrder) SetTarget(targetStatus int32, note string, ip string) err
 			UpdatedAt: time.Now().Unix(),
 			Status:    this.Status,
 			Note:      note,
+			Ip:        ip,
+		})
+	} else {
+		this.Details = append(this.Details, &Detail{
+			UpdatedAt: time.Now().Unix(),
+			Status:    this.Status,
+			Note:      this.GetStatusText(),
 			Ip:        ip,
 		})
 	}
