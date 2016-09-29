@@ -1,56 +1,46 @@
 package opay
 
 import (
+	"log"
 	"sync"
 )
 
-type (
-	CtxStore interface {
-		Param(k string) (v interface{}, ok bool)
-		Set(k string, v interface{})
-		Get(k string) (v interface{}, ok bool)
-	}
-
-	// The result of dealing request.
-	Response struct {
-		addition map[string]interface{}
-		Result   map[string]interface{}
-		Err      error
-		lock     sync.RWMutex
-	}
-)
-
-var _ CtxStore = new(Response)
-
-func (resp *Response) Param(k string) (interface{}, bool) {
-	resp.lock.RLock()
-	defer resp.lock.RUnlock()
-	v, ok := resp.addition[k]
-	return v, ok
-}
-
-func (resp *Response) Set(k string, v interface{}) {
-	resp.lock.Lock()
-	resp.Result[k] = v
-	resp.lock.Unlock()
-}
-
-func (resp *Response) Get(k string) (interface{}, bool) {
-	resp.lock.RLock()
-	defer resp.lock.RUnlock()
-	v, ok := resp.Result[k]
-	return v, ok
+// The result of dealing respuest.
+type Response struct {
+	Result   map[string]interface{}
+	Err      error
+	respChan chan<- *Response //result signal
+	done     bool
+	lock     sync.RWMutex
 }
 
 // Set response error
-func (resp *Response) SetError(err error) {
+func (resp *Response) setError(err error) {
 	resp.lock.Lock()
 	resp.Err = err
 	resp.lock.Unlock()
 }
 
-func (resp *Response) GetErr() error {
-	resp.lock.RLock()
-	defer resp.lock.RUnlock()
-	return resp.Err
+// Write response body.
+func (resp *Response) write(k string, v interface{}) {
+	resp.lock.Lock()
+	defer resp.lock.Unlock()
+	if resp.done {
+		log.Println("As it has been submitted, it can not be written.")
+		return
+	}
+	resp.Result[k] = v
+}
+
+// Complete the dealing of the respuest.
+func (resp *Response) writeback() {
+	resp.lock.Lock()
+	defer resp.lock.Unlock()
+	if resp.done {
+		log.Println("repeated writeback.")
+		return
+	}
+	resp.respChan <- resp
+	resp.done = true
+	close(resp.respChan)
 }

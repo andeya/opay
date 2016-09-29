@@ -16,6 +16,7 @@ var _ Handler = (*Withdraw)(nil)
 
 // 执行入口
 func (w *Withdraw) ServeOpay(ctx *opay.Context) error {
+
 	if ctx.HasStakeholder() {
 		return opay.ErrExtraStakeholder
 	}
@@ -27,7 +28,7 @@ func (w *Withdraw) ServeOpay(ctx *opay.Context) error {
 
 // 新建订单，并标记为等待处理状态，
 // 先从账户扣除提现金额。
-func (w *Withdraw) ToPend() error {
+func (w *Withdraw) Pend() error {
 	// 操作账户
 	err := w.Background.Context.UpdateBalance()
 	if err != nil {
@@ -35,16 +36,16 @@ func (w *Withdraw) ToPend() error {
 	}
 
 	// 创建订单
-	return w.Background.Context.ToPend()
+	return w.Background.Context.Pend()
 }
 
 // 处理账户并标记订单为成功状态
-func (w *Withdraw) ToSucceed() error {
-	return w.Background.Context.ToSucceed()
+func (w *Withdraw) Succeed() error {
+	return w.Background.Context.Succeed()
 }
 
 // 标记订单为撤销状态
-func (w *Withdraw) ToCancel() error {
+func (w *Withdraw) Cancel() error {
 	// 回滚账户
 	err := w.Background.Context.RollbackBalance()
 	if err != nil {
@@ -52,11 +53,11 @@ func (w *Withdraw) ToCancel() error {
 	}
 
 	// 更新订单
-	return w.Background.Context.ToCancel()
+	return w.Background.Context.Cancel()
 }
 
 // 标记订单为失败状态
-func (w *Withdraw) ToFail() error {
+func (w *Withdraw) Fail() error {
 	// 回滚账户
 	err := w.Background.Context.RollbackBalance()
 	if err != nil {
@@ -64,5 +65,5 @@ func (w *Withdraw) ToFail() error {
 	}
 
 	// 更新订单
-	return w.Background.Context.ToFail()
+	return w.Background.Context.Fail()
 }

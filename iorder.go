@@ -1,22 +1,20 @@
 package opay
 
 import (
-	"errors"
-
 	"github.com/jmoiron/sqlx"
 )
 
 type (
 	// Operation interface of order.
 	IOrder interface {
-		// Specify the handler of dealing.
-		Operator() string
+		// for the handler of dealing.
+		GetMeta() *Meta
 
-		// Get the target Action.
-		TargetAction() Action
+		// Get the previous status.
+		PreStatus() int64
 
-		// Get the most recent Action, the default value is UNSET==0.
-		RecentAction() Action
+		// Get the target status.
+		TargetStatus() int64
 
 		// Get user's id.
 		GetUid() string
@@ -29,54 +27,21 @@ type (
 		GetAmount() float64
 
 		// Async execution, and mark pending.
-		ToPend(*sqlx.Tx, CtxStore) error
+		Pend(*sqlx.Tx) error
 
 		// Async execution, and mark the doing.
-		ToDo(*sqlx.Tx, CtxStore) error
+		Do(*sqlx.Tx) error
 
 		// Async execution, and mark the successful.
-		ToSucceed(*sqlx.Tx, CtxStore) error
+		Succeed(*sqlx.Tx) error
 
 		// Async execution, and mark canceled.
-		ToCancel(*sqlx.Tx, CtxStore) error
+		Cancel(*sqlx.Tx) error
 
 		// Async execution, and mark failure.
-		ToFail(*sqlx.Tx, CtxStore) error
+		Fail(*sqlx.Tx) error
 
 		// Sync execution, and mark the successful.
-		SyncDeal(*sqlx.Tx, CtxStore) error
+		SyncDeal(*sqlx.Tx) error
 	}
-
-	// handling order's action
-	Action int
-)
-
-// 六种订单处理行为状态
-const (
-	FAIL      Action = UNSET - 2 //处理失败
-	CANCEL    Action = UNSET - 1 //取消订单
-	UNSET     Action = 0         //未设置
-	PEND      Action = UNSET + 1 //等待处理
-	DO        Action = UNSET + 2 //正在处理
-	SUCCEED   Action = UNSET + 3 //处理成功
-	SYNC_DEAL Action = UNSET + 4 //同步处理至成功
-)
-
-var (
-	actions = map[Action]bool{
-		FAIL:      true,
-		CANCEL:    true,
-		UNSET:     true,
-		PEND:      true,
-		DO:        true,
-		SUCCEED:   true,
-		SYNC_DEAL: true,
-	}
-
-	ErrUnsetAction       = errors.New("The initiator's target Action cannot equal 'UNSET'.")
-	ErrInvalidAction     = errors.New("Invalid Action.")
-	ErrCancelAction      = errors.New("The Order cannot be canceled.")
-	ErrReprocess         = errors.New("Repeat process order.")
-	ErrDifferentOperator = errors.New("Initiator's Operator and Stakeholder must be same.")
-	ErrDifferentAction   = errors.New("Initiator's Action and Stakeholder must be same.")
 )

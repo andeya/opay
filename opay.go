@@ -4,52 +4,59 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type (
-	// Order Processing Engine.
-	Engine struct {
-		*SettleFuncMap          //global map of SettleFunc
-		*ServeMux               //global router of handler
-		queue          Queue    //request queue
-		db             *sqlx.DB //global database operation instance
-		Accuracy
-	}
-)
+type Opay struct {
+	metas          map[string]*Meta
+	queue          Queue    //request queue
+	db             *sqlx.DB //global database operation instance
+	*SettleFuncMap          //global map of SettleFunc
+	Accuracy
+	metasLock sync.RWMutex
+}
 
 const (
 	DEFAULT_DECIMAL_PLACES int = 8
 )
 
-// New a Order Processing Engine.
-// If param @decimalPlaces < 0, uses default value(8).
-func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Engine {
+func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Opay {
 	if decimalPlaces < 0 {
 		decimalPlaces = DEFAULT_DECIMAL_PLACES
 	}
 	accuracyString := "0." + strings.Repeat("0", decimalPlaces-1) + "1"
 	accuracyFloat64, _ := strconv.ParseFloat(accuracyString, 64)
-	engine := &Engine{
+
+	opay := &Opay{
 		SettleFuncMap: globalSettleFuncMap,
-		ServeMux:      globalServeMux,
 		db:            db,
+		metas:         make(map[string]*Meta),
 		Accuracy:      func() float64 { return accuracyFloat64 },
 	}
-	engine.queue = newOrderChan(queueCapacity, engine)
-	return engine
+	opay.queue = newOrderChan(queueCapacity, opay)
+	return opay
 }
 
-// Engine start.
-func (engine *Engine) Serve() {
-	if err := engine.db.Ping(); err != nil {
+// 处理请求
+func (opay *Opay) Do(req Request) *Response {
+	return <-opay.queue.Push(req)
+}
+
+func (opay *Opay) DB() *sqlx.DB {
+	return opay.db
+}
+
+// Opay start.
+func (opay *Opay) Serve() {
+	if err := opay.db.Ping(); err != nil {
 		panic(err)
 	}
 	for {
 		// 读出一条请求
 		// 无限等待
-		req := engine.queue.Pull()
+		req := opay.queue.Pull()
 
 		var err error
 
@@ -59,7 +66,7 @@ func (engine *Engine) Serve() {
 			stakeholderSettle SettleFunc
 		)
 
-		initiatorSettle, err = engine.GetSettleFunc(req.Initiator.GetAid())
+		initiatorSettle, err = opay.GetSettleFunc(req.Initiator.GetAid())
 		if err != nil {
 			// 指定的资产账户的操作接口不存在时返回
 			req.setError(err)
@@ -67,7 +74,7 @@ func (engine *Engine) Serve() {
 			continue
 		}
 		if req.Stakeholder != nil {
-			stakeholderSettle, err = engine.GetSettleFunc(req.Stakeholder.GetAid())
+			stakeholderSettle, err = opay.GetSettleFunc(req.Stakeholder.GetAid())
 			if err != nil {
 				// 指定的资产账户的操作接口不存在时返回
 				req.setError(err)
@@ -91,7 +98,7 @@ func (engine *Engine) Serve() {
 			}()
 
 			if req.Tx == nil {
-				req.Tx, err = engine.db.Beginx()
+				req.Tx, err = opay.db.Beginx()
 				if err != nil {
 					return
 				}
@@ -104,21 +111,13 @@ func (engine *Engine) Serve() {
 				}()
 			}
 
-			err = engine.ServeMux.serve(&Context{
+			err = req.Initiator.GetMeta().serve(&Context{
 				initiatorSettle:   initiatorSettle,
 				stakeholderSettle: stakeholderSettle,
 				Request:           req,
-				Accuracy:          engine.Accuracy,
+				Response:          req.response,
+				Accuracy:          opay.Accuracy,
 			})
 		}()
 	}
-}
-
-// 处理请求
-func (engine *Engine) Do(req Request) Response {
-	return <-engine.queue.Push(req)
-}
-
-func (engine *Engine) DB() *sqlx.DB {
-	return engine.db
 }

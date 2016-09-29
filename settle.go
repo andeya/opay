@@ -8,7 +8,7 @@ import (
 )
 
 // 账户余额操作函数
-type SettleFunc func(uid string, amount float64, tx *sqlx.Tx, ctxStore CtxStore) error
+type SettleFunc func(uid string, amount float64, tx *sqlx.Tx) error
 
 // 账户余额操作函数路由
 type SettleFuncMap struct {
@@ -23,7 +23,7 @@ func (this *SettleFuncMap) GetSettleFunc(aid string) (SettleFunc, error) {
 	acc, ok := this.m[aid]
 	this.mu.RUnlock()
 	if !ok {
-		return nil, errors.New("Not found SettleFunc '" + aid + "'.")
+		return nil, errors.New("opay: not found SettleFunc '" + aid + "'.")
 	}
 	return acc, nil
 }
@@ -35,7 +35,7 @@ func (this *SettleFuncMap) RegSettleFunc(aid string, fn SettleFunc) error {
 	defer this.mu.Unlock()
 	_, ok := this.m[aid]
 	if ok {
-		return errors.New("SettleFunc '" + aid + "' has been registered.")
+		return errors.New("opay: settleFunc '" + aid + "' has been registered.")
 	}
 	this.m[aid] = fn
 	return nil
@@ -55,6 +55,6 @@ func RegSettleFunc(aid string, acc SettleFunc) error {
 }
 
 // Empty Settle Function of empty asset.
-func emptySettle(uid string, amount float64, tx *sqlx.Tx, ctxStore CtxStore) error {
-	return errors.New("Empty settle function.")
+func emptySettle(uid string, amount float64, tx *sqlx.Tx) error {
+	return errors.New("opay: empty settle function.")
 }

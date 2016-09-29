@@ -27,7 +27,7 @@ func (e *Exchange) ServeOpay(ctx *opay.Context) error {
 }
 
 // 处理账户并标记订单为成功状态
-func (e *Exchange) ToSucceed() error {
+func (e *Exchange) Succeed() error {
 	// 操作账户
 	err := e.Background.Context.UpdateBalance()
 	if err != nil {
@@ -35,7 +35,7 @@ func (e *Exchange) ToSucceed() error {
 	}
 
 	// 更新订单
-	return e.Background.Context.ToSucceed()
+	return e.Background.Context.Succeed()
 }
 
 // 实时兑换

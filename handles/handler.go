@@ -1,8 +1,6 @@
 package handles
 
 import (
-	"errors"
-
 	"github.com/henrylee2cn/opay"
 )
 
@@ -16,19 +14,19 @@ type (
 		opay.Handler
 
 		// 新建订单，并标记为等待处理状态
-		ToPend() error
+		Pend() error
 
 		// 标记订单为正在处理状态，或有相关异步回调操作
-		ToDo() error
+		Do() error
 
 		// 处理账户并标记订单为成功状态
-		ToSucceed() error
+		Succeed() error
 
 		// 标记订单为撤销状态
-		ToCancel() error
+		Cancel() error
 
 		// 标记订单为失败状态
-		ToFail() error
+		Fail() error
 
 		// 同步处理订单，并标记为成功状态
 		SyncDeal() error
@@ -40,29 +38,27 @@ type (
 	}
 )
 
-var ErrAction = errors.New("Action not supported.")
-
 // 执行入口
 func (b *Background) Call(handler Handler, ctx *opay.Context) error {
 	b.Context = ctx
-	switch b.Action() {
+	switch b.Step() {
 	case opay.FAIL:
-		return handler.ToFail()
+		return handler.Fail()
 	case opay.CANCEL:
-		return handler.ToCancel()
+		return handler.Cancel()
 	case opay.PEND:
-		return handler.ToPend()
+		return handler.Pend()
 	case opay.DO:
-		return handler.ToDo()
+		return handler.Do()
 	case opay.SUCCEED:
-		return handler.ToSucceed()
+		return handler.Succeed()
 	case opay.SYNC_DEAL:
 		return handler.SyncDeal()
 	}
-	return ErrAction
+	return opay.ErrIllegalStep
 }
 
 // 处理账户并标记订单为成功状态
 func (b *Background) SyncDeal() error {
-	return ErrAction
+	return opay.ErrIllegalStep
 }

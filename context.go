@@ -8,6 +8,7 @@ type Context struct {
 	initiatorSettle   SettleFunc
 	stakeholderSettle SettleFunc
 	Request
+	*Response
 	Accuracy
 }
 
@@ -17,69 +18,69 @@ func (ctx *Context) Deadline() time.Time {
 }
 
 // 新建订单，并标记为等待处理状态
-func (ctx *Context) ToPend() error {
+func (ctx *Context) Pend() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.Request.Stakeholder.ToPend(ctx.Request.Tx, ctx.Request.response)
+		err := ctx.Request.Stakeholder.Pend(ctx.Request.Tx)
 		if err != nil {
 			return err
 		}
 	}
-	return ctx.Request.Initiator.ToPend(ctx.Request.Tx, ctx.Request.response)
+	return ctx.Request.Initiator.Pend(ctx.Request.Tx)
 }
 
 // 标记订单为正在处理状态，或有相关异步回调操作
-func (ctx *Context) ToDo() error {
+func (ctx *Context) Do() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.Request.Stakeholder.ToDo(ctx.Request.Tx, ctx.Request.response)
+		err := ctx.Request.Stakeholder.Do(ctx.Request.Tx)
 		if err != nil {
 			return err
 		}
 	}
-	return ctx.Request.Initiator.ToDo(ctx.Request.Tx, ctx.Request.response)
+	return ctx.Request.Initiator.Do(ctx.Request.Tx)
 }
 
 // 处理账户并标记订单为成功状态
-func (ctx *Context) ToSucceed() error {
+func (ctx *Context) Succeed() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.Request.Stakeholder.ToSucceed(ctx.Request.Tx, ctx.Request.response)
+		err := ctx.Request.Stakeholder.Succeed(ctx.Request.Tx)
 		if err != nil {
 			return err
 		}
 	}
-	return ctx.Request.Initiator.ToSucceed(ctx.Request.Tx, ctx.Request.response)
+	return ctx.Request.Initiator.Succeed(ctx.Request.Tx)
 }
 
 // 标记订单为撤销状态
-func (ctx *Context) ToCancel() error {
+func (ctx *Context) Cancel() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.Request.Stakeholder.ToCancel(ctx.Request.Tx, ctx.Request.response)
+		err := ctx.Request.Stakeholder.Cancel(ctx.Request.Tx)
 		if err != nil {
 			return err
 		}
 	}
-	return ctx.Request.Initiator.ToCancel(ctx.Request.Tx, ctx.Request.response)
+	return ctx.Request.Initiator.Cancel(ctx.Request.Tx)
 }
 
 // 标记订单为失败状态
-func (ctx *Context) ToFail() error {
+func (ctx *Context) Fail() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.Request.Stakeholder.ToFail(ctx.Request.Tx, ctx.Request.response)
+		err := ctx.Request.Stakeholder.Fail(ctx.Request.Tx)
 		if err != nil {
 			return err
 		}
 	}
-	return ctx.Request.Initiator.ToFail(ctx.Request.Tx, ctx.Request.response)
+	return ctx.Request.Initiator.Fail(ctx.Request.Tx)
 }
 
 // 同步处理订单，并标记为成功状态
 func (ctx *Context) SyncDeal() error {
 	if ctx.Request.Stakeholder != nil {
-		err := ctx.Request.Stakeholder.SyncDeal(ctx.Request.Tx, ctx.Request.response)
+		err := ctx.Request.Stakeholder.SyncDeal(ctx.Request.Tx)
 		if err != nil {
 			return err
 		}
 	}
-	return ctx.Request.Initiator.SyncDeal(ctx.Request.Tx, ctx.Request.response)
+	return ctx.Request.Initiator.SyncDeal(ctx.Request.Tx)
 }
 
 func (ctx *Context) HasStakeholder() bool {
@@ -93,7 +94,6 @@ func (ctx *Context) UpdateBalance() error {
 			ctx.Request.Stakeholder.GetUid(),
 			ctx.Request.Stakeholder.GetAmount(),
 			ctx.Request.Tx,
-			ctx.Request.response,
 		)
 		if err != nil {
 			return err
@@ -103,7 +103,6 @@ func (ctx *Context) UpdateBalance() error {
 		ctx.Request.Initiator.GetUid(),
 		ctx.Request.Initiator.GetAmount(),
 		ctx.Request.Tx,
-		ctx.Request.response,
 	)
 }
 
@@ -114,7 +113,6 @@ func (ctx *Context) RollbackBalance() error {
 			ctx.Request.Stakeholder.GetUid(),
 			-ctx.Request.Stakeholder.GetAmount(),
 			ctx.Request.Tx,
-			ctx.Request.response,
 		)
 		if err != nil {
 			return err
@@ -125,11 +123,14 @@ func (ctx *Context) RollbackBalance() error {
 		ctx.Request.Initiator.GetUid(),
 		-ctx.Request.Initiator.GetAmount(),
 		ctx.Request.Tx,
-		ctx.Request.response,
 	)
+}
+
+func (ctx *Context) Param(k string) interface{} {
+	return ctx.Request.param(k)
 }
 
 // Write response values.
 func (ctx *Context) Write(k string, v interface{}) {
-	ctx.Request.write(k, v)
+	ctx.Response.write(k, v)
 }

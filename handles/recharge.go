@@ -26,7 +26,7 @@ func (r *Recharge) ServeOpay(ctx *opay.Context) error {
 }
 
 // 处理账户并标记订单为成功状态
-func (r *Recharge) ToSucceed() error {
+func (r *Recharge) Succeed() error {
 	// 操作账户
 	err := r.Background.Context.UpdateBalance()
 	if err != nil {
@@ -34,7 +34,7 @@ func (r *Recharge) ToSucceed() error {
 	}
 
 	// 更新订单
-	return r.Background.Context.ToSucceed()
+	return r.Background.Context.Succeed()
 }
 
 // 实时充值

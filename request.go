@@ -1,8 +1,6 @@
 package opay
 
 import (
-	"errors"
-	"log"
 	"sync"
 	"time"
 
@@ -15,19 +13,11 @@ type Request struct {
 	Initiator   IOrder                 //master order
 	Stakeholder IOrder                 //the optional, slave order
 	response    *Response
-	respChan    chan<- Response //result signal
-	*sqlx.Tx                    //the optional, database transaction
+	*sqlx.Tx    //the optional, database transaction
 	operator    string
-	action      Action
-	done        bool
+	step        Step
 	lock        sync.RWMutex
 }
-
-var (
-	ErrStakeholderNotExist = errors.New("Stakeholder Order is not exist.")
-	ErrExtraStakeholder    = errors.New("Stakeholder Order is extra.")
-	ErrIncorrectAmount     = errors.New("Account operation amount is incorrect.")
-)
 
 // 获取指定的订单处理操作符
 func (req *Request) Operator() string {
@@ -37,124 +27,143 @@ func (req *Request) Operator() string {
 }
 
 // 获取订单处理的行为目标
-func (req *Request) Action() Action {
+func (req *Request) Step() Step {
 	req.lock.RLock()
 	defer req.lock.RUnlock()
-	return req.action
+	return req.step
 }
 
 // Prepare the request.
-func (req *Request) prepare(engine *Engine) (respChan <-chan Response, err error) {
+func (req *Request) prepare(opay *Opay) (respChan <-chan *Response, err error) {
 	req.lock.Lock()
 	defer req.lock.Unlock()
-	req.done = false
-	if req.Addition == nil {
-		req.Addition = make(map[string]interface{})
-	}
-	req.response = &Response{
-		addition: req.Addition,
-		Result:   make(map[string]interface{}),
-	}
-	c := make(chan Response)
-	req.respChan = (chan<- Response)(c)
-	respChan = (<-chan Response)(c)
-	err = req.validate(engine)
-	if err == nil {
-		req.operator = req.Initiator.Operator()
-		req.action = req.Initiator.TargetAction()
-	}
-	return
-}
 
-// 检查请求的合法性
-func (req *Request) validate(engine *Engine) error {
+	c := make(chan *Response, 1)
+	respChan = (<-chan *Response)(c)
+
+	req.response = &Response{
+		Result:   make(map[string]interface{}),
+		respChan: (chan<- *Response)(c),
+	}
+
 	// The main order can not be empty.
 	if req.Initiator == nil {
-		return errors.New("Request.Initiator Can not be nil.")
+		err = ErrInitiatorNil
+		return
 	}
 
-	// 检查操作是否存在
-	if err := engine.CheckOperator(req.Initiator.Operator()); err != nil {
-		return err
+	meta := req.Initiator.GetMeta()
+
+	// 检查订单状态是否已注册
+	preStatus, ok := meta.Status(req.Initiator.PreStatus())
+	if !ok {
+		err = ErrInvalidStatus
+		return
+	}
+	targetStatus, ok := meta.Status(req.Initiator.TargetStatus())
+	if !ok {
+		err = ErrInvalidStatus
+		return
 	}
 
 	// 检查是否为重复处理行为
-	if req.Initiator.TargetAction() == req.Initiator.RecentAction() {
-		return ErrReprocess
+	if preStatus.Code == targetStatus.Code {
+		err = ErrReprocess
+		return
 	}
+
+	// 设置订单的处理阶段
+	req.step = targetStatus.Step
 
 	// 必须设定目标处理行为
-	if req.Initiator.TargetAction() == UNSET {
-		return ErrUnsetAction
+	if req.step == UNSET {
+		err = ErrInvalidOperation
+		return
 	}
 
-	// 检查处理行为是否超出范围
-	if !actions[req.Initiator.TargetAction()] || !actions[req.Initiator.RecentAction()] {
-		return ErrInvalidAction
+	curStep := preStatus.Step
+	// 不可操作已撤销或已完成的订单
+	if curStep == CANCEL ||
+		curStep == FAIL ||
+		curStep == SUCCEED ||
+		curStep == SYNC_DEAL {
+		err = ErrInvalidOperation
+		return
 	}
 
 	// 非待处理状态的订单不可撤销
-	if req.Initiator.TargetAction() == CANCEL && req.Initiator.RecentAction() != PEND {
-		return ErrCancelAction
+	if curStep != PEND && req.step == CANCEL {
+		err = ErrCancelStep
+		return
 	}
 
 	// 主订单操作金额不能为0
-	if engine.Equal(req.Initiator.GetAmount(), 0) {
-		return ErrIncorrectAmount
+	if opay.Equal(req.Initiator.GetAmount(), 0) {
+		err = ErrIncorrectAmount
+		return
 	}
 
 	// 检查从属订单
 	if req.Stakeholder != nil {
 		// 检查主从订单操作是否一致
-		if req.Stakeholder.Operator() != req.Initiator.Operator() {
-			return ErrDifferentOperator
+		if req.Stakeholder.GetMeta() != meta {
+			err = ErrDifferentOperator
+			return
 		}
 
-		// 允许从属订单不设定目标行为
-		if req.Stakeholder.TargetAction() != UNSET {
-			// 检查主从订单行为是否一致
-			if req.Stakeholder.TargetAction() != req.Initiator.TargetAction() ||
-				req.Stakeholder.RecentAction() != req.Initiator.RecentAction() {
-				return ErrDifferentAction
-			}
+		// 检查订单状态是否已注册
+		preStatus2, ok := meta.Status(req.Stakeholder.PreStatus())
+		if !ok {
+			err = ErrInvalidStatus
+			return
+		}
+		targetStatus2, ok := meta.Status(req.Stakeholder.TargetStatus())
+		if !ok {
+			err = ErrInvalidStatus
+			return
+		}
+
+		// 检查主从订单行为是否一致
+		if preStatus2.Step != curStep ||
+			targetStatus2.Step != req.step {
+			err = ErrDifferentStep
+			return
 		}
 
 		// 从属订单操作金额不能为0
-		if engine.Equal(req.Stakeholder.GetAmount(), 0) {
-			return ErrIncorrectAmount
+		if opay.Equal(req.Stakeholder.GetAmount(), 0) {
+			err = ErrIncorrectAmount
+			return
 		}
 	}
 
-	return nil
+	if req.Addition == nil {
+		req.Addition = make(map[string]interface{})
+	}
+	req.operator = meta.OrderType()
+
+	return
+}
+
+func (req *Request) param(k string) interface{} {
+	req.lock.RLock()
+	defer req.lock.RUnlock()
+	return req.Addition[k]
 }
 
 // Write response body.
 func (req *Request) write(k string, v interface{}) {
-	req.lock.Lock()
-	defer req.lock.Unlock()
-	if req.done {
-		log.Println("As it has been submitted, it can not be written.")
-		return
-	}
-	req.response.Set(k, v)
+	req.response.write(k, v)
 }
 
 // Set response error
 func (req *Request) setError(err error) {
-	req.response.SetError(err)
+	req.response.setError(err)
 }
 
 // Complete the dealing of the request.
 func (req *Request) writeback() {
-	req.lock.Lock()
-	defer req.lock.Unlock()
-	if req.done {
-		log.Println("repeated writeback.")
-		return
-	}
-	req.respChan <- *req.response
-	req.done = true
-	close(req.respChan)
+	req.response.writeback()
 }
 
 func (req *Request) isNil() bool {

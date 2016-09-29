@@ -11,15 +11,15 @@ type (
 	// 订单队列
 	Queue interface {
 		SetCap(int)
-		Push(Request) (respChan <-chan Response)
+		Push(Request) (respChan <-chan *Response)
 		Pull() Request
-		GetEngine() *Engine
+		GetOpay() *Opay
 	}
 
 	OrderChan struct {
-		c      chan Request
-		mu     sync.RWMutex
-		engine *Engine
+		c    chan Request
+		mu   sync.RWMutex
+		opay *Opay
 	}
 )
 
@@ -27,13 +27,13 @@ const (
 	DEFAULT_QUEUE_CAP = 1024 //队列默认容量
 )
 
-func newOrderChan(queueCapacity int, engine *Engine) Queue {
+func newOrderChan(queueCapacity int, opay *Opay) Queue {
 	if queueCapacity <= 0 {
 		queueCapacity = DEFAULT_QUEUE_CAP
 	}
 	return &OrderChan{
-		c:      make(chan Request, queueCapacity),
-		engine: engine,
+		c:    make(chan Request, queueCapacity),
+		opay: opay,
 	}
 }
 
@@ -57,11 +57,11 @@ func (oc *OrderChan) SetCap(queueCapacity int) {
 }
 
 // 推送一条订单
-func (oc *OrderChan) Push(req Request) (respChan <-chan Response) {
+func (oc *OrderChan) Push(req Request) (respChan <-chan *Response) {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
-	respChan, err := req.prepare(oc.GetEngine())
+	respChan, err := req.prepare(oc.GetOpay())
 	if err != nil {
 		req.setError(err)
 		req.writeback()
@@ -126,8 +126,8 @@ func (oc *OrderChan) Pull() Request {
 	return req
 }
 
-func (oc *OrderChan) GetEngine() *Engine {
+func (oc *OrderChan) GetOpay() *Opay {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
-	return oc.engine
+	return oc.opay
 }

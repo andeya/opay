@@ -1,12 +1,9 @@
 package opay
 
 import (
-	"errors"
 	"math"
 	"time"
 )
-
-var ErrTimeout = errors.New("Add to queue timeout.")
 
 func checkTimeout(deadline time.Time) (timeout time.Duration, errTimeout error) {
 	// No timeout

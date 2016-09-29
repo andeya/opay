@@ -28,8 +28,8 @@ func (t *Transfer) ServeOpay(ctx *opay.Context) error {
 }
 
 // 处理账户并标记订单为成功状态，
-// IOrder.ToSucceed()中应包含Uid2的订单创建与标记成功
-func (t *Transfer) ToSucceed() error {
+// IOrder.Succeed()中应包含Uid2的订单创建与标记成功
+func (t *Transfer) Succeed() error {
 	// 操作账户
 	err := t.Background.Context.UpdateBalance()
 	if err != nil {
@@ -37,7 +37,7 @@ func (t *Transfer) ToSucceed() error {
 	}
 
 	// 更新订单
-	return t.Background.Context.ToSucceed()
+	return t.Background.Context.Succeed()
 }
 
 // 实时转账
@@ -49,5 +49,5 @@ func (t *Transfer) SyncDeal() error {
 	}
 
 	// 更新订单
-	return t.Background.Context.ToSucceed()
+	return t.Background.Context.Succeed()
 }
