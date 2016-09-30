@@ -17,6 +17,6 @@ var (
 	ErrInvalidOperation  = errors.New("opay: invalid operation.")
 	ErrCancelStep        = errors.New("opay: the order cannot be canceled.")
 	ErrReprocess         = errors.New("opay: repeat process order.")
-	ErrDifferentOperator = errors.New("opay: initiator's operator and Stakeholder must be same.")
-	ErrDifferentStep     = errors.New("opay: initiator's Step and Stakeholder must be same.")
+	ErrDifferentOperator = errors.New("opay: initiator's operator and stakeholder's must be same.")
+	ErrDifferentStep     = errors.New("opay: initiator's step and stakeholder's must be same.")
 )
