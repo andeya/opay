@@ -66,12 +66,12 @@ func (o *Opay) RegMeta(orderType string, handler Handler, statuses []Status) (*M
 	return meta, nil
 }
 
-func (o *Opay) Meta(orderType string) (*Meta, bool) {
-	o.metasLock.RLock()
-	defer o.metasLock.RUnlock()
-	meta, ok := o.metas[orderType]
-	return meta, ok
-}
+// func (o *Opay) Meta(orderType string) (*Meta, bool) {
+// 	o.metasLock.RLock()
+// 	defer o.metasLock.RUnlock()
+// 	meta, ok := o.metas[orderType]
+// 	return meta, ok
+// }
 
 // func (o *Opay) MetaStatus(orderType string, code int64) (Status, bool) {
 // 	o.metasLock.RLock()
