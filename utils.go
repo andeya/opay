@@ -71,6 +71,19 @@ func (this *Floater) Atof(s string, bitSize int) (float64, error) {
 	return strconv.ParseFloat(fmt.Sprintf(this.format, f), bitSize)
 }
 
+func (this *Floater) RoundF(f float64) float64 {
+	f, _ = strconv.ParseFloat(fmt.Sprintf(this.format, f), 64)
+	return f
+}
+
+func (this *Floater) RoundA(s string, bitSize int) (string, error) {
+	f, err := strconv.ParseFloat(s, bitSize)
+	if err != nil {
+		return s, err
+	}
+	return fmt.Sprintf(this.format, f), nil
+}
+
 func (this *Floater) Equal(a, b float64) bool {
 	return math.Abs(a-b) < this.accuracy
 }
