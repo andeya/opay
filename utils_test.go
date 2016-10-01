@@ -34,34 +34,34 @@ func TestAtof(t *testing.T) {
 	t.Log(11.12345678901235 == f)
 }
 
-func TestRoundF(t *testing.T) {
+func TestFtof(t *testing.T) {
 	f0 := 11.12345678901234567890
 
 	floater := NewFloater(0)
-	f := floater.RoundF(f0)
+	f := floater.Ftof(f0)
 	t.Logf("%v:%s", floater.Accuracy(), floater.Ftoa(f))
 
 	floater = NewFloater(10)
-	f = floater.RoundF(f0)
+	f = floater.Ftof(f0)
 	t.Logf("%v:%s", floater.Accuracy(), floater.Ftoa(f))
 
 	floater = NewFloater(14)
-	f = floater.RoundF(f0)
+	f = floater.Ftof(f0)
 	t.Logf("%v:%s", floater.Accuracy(), floater.Ftoa(f))
 }
 
-func TestRoundA(t *testing.T) {
+func TestAtoa(t *testing.T) {
 	s0 := "11.12345678901234567890"
 
 	floater := NewFloater(0)
-	s, err := floater.RoundA(s0, 64)
+	s, err := floater.Atoa(s0, 64)
 	t.Logf("%v:%s %v", floater.Accuracy(), s, err)
 
 	floater = NewFloater(10)
-	s, err = floater.RoundA(s0, 64)
+	s, err = floater.Atoa(s0, 64)
 	t.Logf("%v:%s %v", floater.Accuracy(), s, err)
 
 	floater = NewFloater(14)
-	s, err = floater.RoundA(s0, 64)
+	s, err = floater.Atoa(s0, 64)
 	t.Logf("%v:%s %v", floater.Accuracy(), s, err)
 }
