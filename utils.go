@@ -26,25 +26,28 @@ func checkTimeout(deadline time.Time) (timeout time.Duration, errTimeout error) 
 }
 
 type Floater struct {
-	numOfDecimalPlaces uint8
+	numOfDecimalPlaces int
 	accuracy           float64
 	format             string
 }
 
-func NewFloater(numOfDecimalPlaces uint8) *Floater {
+func NewFloater(numOfDecimalPlaces int) *Floater {
+	if numOfDecimalPlaces < 0 || numOfDecimalPlaces > 14 {
+		panic("the range of Floater.numOfDecimalPlaces must be between 0 and 14.")
+	}
 	var accuracy float64 = 1
 	if numOfDecimalPlaces > 0 {
-		accuracyString := "0." + strings.Repeat("0", int(numOfDecimalPlaces-1)) + "1"
+		accuracyString := "0." + strings.Repeat("0", numOfDecimalPlaces-1) + "1"
 		accuracy, _ = strconv.ParseFloat(accuracyString, 64)
 	}
 	return &Floater{
 		numOfDecimalPlaces: numOfDecimalPlaces,
 		accuracy:           accuracy,
-		format:             "%0." + strconv.Itoa(int(numOfDecimalPlaces)) + "f",
+		format:             "%0." + strconv.Itoa(numOfDecimalPlaces) + "f",
 	}
 }
 
-func (this *Floater) NumOfDecimalPlaces() uint8 {
+func (this *Floater) NumOfDecimalPlaces() int {
 	return this.numOfDecimalPlaces
 }
 

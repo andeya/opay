@@ -5,7 +5,7 @@ import (
 )
 
 func TestFtoa(t *testing.T) {
-	f := 11.12345678901234567890
+	f := 11.1234567890123350
 
 	floater := NewFloater(0)
 	t.Log(floater.Accuracy(), floater.Ftoa(f))
@@ -13,13 +13,7 @@ func TestFtoa(t *testing.T) {
 	floater = NewFloater(10)
 	t.Log(floater.Accuracy(), floater.Ftoa(f))
 
-	floater = NewFloater(15)
-	t.Log(floater.Accuracy(), floater.Ftoa(f))
-
-	floater = NewFloater(20)
-	t.Log(floater.Accuracy(), floater.Ftoa(f))
-
-	floater = NewFloater(25)
+	floater = NewFloater(14)
 	t.Log(floater.Accuracy(), floater.Ftoa(f))
 }
 
@@ -28,21 +22,14 @@ func TestAtof(t *testing.T) {
 
 	floater := NewFloater(0)
 	f, err := floater.Atof(s, 64)
-	t.Logf("%v:%0.25f %v", 0, f, err)
+	t.Logf("%v:%s %v", floater.Accuracy(), floater.Ftoa(f), err)
 
 	floater = NewFloater(10)
 	f, err = floater.Atof(s, 64)
-	t.Logf("%v:%0.25f %v", floater.Accuracy(), f, err)
+	t.Logf("%v:%s %v", floater.Accuracy(), floater.Ftoa(f), err)
 
-	floater = NewFloater(15)
+	floater = NewFloater(14)
 	f, err = floater.Atof(s, 64)
-	t.Logf("%v:%0.25f %v", floater.Accuracy(), f, err)
-
-	floater = NewFloater(20)
-	f, err = floater.Atof(s, 64)
-	t.Logf("%v:%0.25f %v", floater.Accuracy(), f, err)
-
-	floater = NewFloater(25)
-	f, err = floater.Atof(s, 64)
-	t.Logf("%v:%0.25f %v", floater.Accuracy(), f, err)
+	t.Logf("%v:%s %v", floater.Accuracy(), floater.Ftoa(f), err)
+	t.Log(11.12345678901235 == f)
 }

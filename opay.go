@@ -16,7 +16,7 @@ type Opay struct {
 	metasLock sync.RWMutex
 }
 
-func NewOpay(db *sqlx.DB, queueCapacity int, numOfDecimalPlaces uint8) *Opay {
+func NewOpay(db *sqlx.DB, queueCapacity int, numOfDecimalPlaces int) *Opay {
 	opay := &Opay{
 		SettleFuncMap: globalSettleFuncMap,
 		db:            db,
