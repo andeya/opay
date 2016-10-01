@@ -9,7 +9,7 @@ type Context struct {
 	stakeholderSettle SettleFunc
 	Request
 	*Response
-	Accuracy
+	*Floater
 }
 
 // 获取处理超时，不填则不限时

@@ -2,8 +2,6 @@ package opay
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
@@ -14,26 +12,16 @@ type Opay struct {
 	queue          Queue    //request queue
 	db             *sqlx.DB //global database operation instance
 	*SettleFuncMap          //global map of SettleFunc
-	Accuracy
+	*Floater
 	metasLock sync.RWMutex
 }
 
-const (
-	DEFAULT_DECIMAL_PLACES int = 8
-)
-
-func NewOpay(db *sqlx.DB, queueCapacity int, decimalPlaces int) *Opay {
-	if decimalPlaces < 0 {
-		decimalPlaces = DEFAULT_DECIMAL_PLACES
-	}
-	accuracyString := "0." + strings.Repeat("0", decimalPlaces-1) + "1"
-	accuracyFloat64, _ := strconv.ParseFloat(accuracyString, 64)
-
+func NewOpay(db *sqlx.DB, queueCapacity int, numOfDecimalPlaces uint8) *Opay {
 	opay := &Opay{
 		SettleFuncMap: globalSettleFuncMap,
 		db:            db,
 		metas:         make(map[string]*Meta),
-		Accuracy:      func() float64 { return accuracyFloat64 },
+		Floater:       NewFloater(numOfDecimalPlaces),
 	}
 	opay.queue = newOrderChan(queueCapacity, opay)
 	return opay
@@ -116,7 +104,7 @@ func (opay *Opay) Serve() {
 				stakeholderSettle: stakeholderSettle,
 				Request:           req,
 				Response:          req.response,
-				Accuracy:          opay.Accuracy,
+				Floater:           opay.Floater,
 			})
 		}()
 	}
