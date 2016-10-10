@@ -5,5 +5,8 @@ import (
 )
 
 func TestCreateOrderid(t *testing.T) {
-	t.Log(CreateOrderid())
+	SetTimeZone("CST", 8)
+	orderid := createOrderid("a")
+	t.Log(orderid)
+	t.Log(GetAidFromOrderid(orderid))
 }

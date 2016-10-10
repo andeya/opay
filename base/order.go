@@ -65,7 +65,11 @@ func NewBaseOrder(
 	if !ok {
 		return nil, errors.New("Target status is invalid.")
 	}
+	if len(aid) == 0 || len(aid) > 2 || strings.HasPrefix(aid, "0") {
+		return nil, errors.New("wrong aid format.")
+	}
 	var o = &BaseOrder{
+		Id:        createOrderid(aid),
 		CreatedAt: time.Now().Unix(),
 		Aid:       aid,
 		Uid:       uid,
@@ -76,7 +80,6 @@ func NewBaseOrder(
 		Details:   []*Detail{},
 		meta:      meta,
 	}
-	o.SetNewId()
 	err := o.SetTarget(targetStatus, ip)
 	if err != nil {
 		return nil, err
@@ -151,12 +154,6 @@ func (this *BaseOrder) Fail(tx *sqlx.Tx) error {
 // Sync execution, and mark the successful.
 func (this *BaseOrder) SyncDeal(tx *sqlx.Tx) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing SyncDeal method).")
-}
-
-// set order id, 32bytes(time23+type3+random6)
-func (this *BaseOrder) SetNewId() *BaseOrder {
-	this.Id = CreateOrderid()
-	return this
 }
 
 // Set the target Action.
