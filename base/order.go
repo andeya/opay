@@ -49,8 +49,37 @@ var _ opay.IOrder = new(BaseOrder)
 
 //note: if param note is empty, do not append detail;
 //and if param id is empty, the BaseOrder is new one.
-func NewBaseOrder(
+func NewBaseOrderFromAid(
 	meta *opay.Meta,
+	aid string,
+	uid string,
+	amount float64,
+	summary string,
+	targetStatus int64,
+	ip string,
+) (*BaseOrder, error) {
+	return newBaseOrder(meta, CreateOrderid(aid), aid, uid, amount, summary, targetStatus, ip)
+}
+
+func NewBaseOrderFromId(
+	meta *opay.Meta,
+	id string,
+	uid string,
+	amount float64,
+	summary string,
+	targetStatus int64,
+	ip string,
+) (*BaseOrder, error) {
+	aid, err := CheckOrderid(id)
+	if err != nil {
+		return nil, err
+	}
+	return newBaseOrder(meta, id, aid, uid, amount, summary, targetStatus, ip)
+}
+
+func newBaseOrder(
+	meta *opay.Meta,
+	id string,
 	aid string,
 	uid string,
 	amount float64,
@@ -69,7 +98,7 @@ func NewBaseOrder(
 		return nil, errors.New("wrong aid format.")
 	}
 	var o = &BaseOrder{
-		Id:        createOrderid(aid),
+		Id:        id,
 		CreatedAt: time.Now().Unix(),
 		Aid:       aid,
 		Uid:       uid,

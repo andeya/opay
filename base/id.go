@@ -1,6 +1,7 @@
 package base
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -23,7 +24,7 @@ var orderid = &struct {
 // 可保证同一进程内全局唯一，重复概率为0
 // 不同进程生成的ID几乎不会重复，但仍有重复概率
 // 建议：全部产品使用同一个进程生成ID
-func createOrderid(aid string) string {
+func CreateOrderid(aid string) string {
 	switch len(aid) {
 	case 0:
 		aid = "00"
@@ -53,4 +54,15 @@ func GetAidFromOrderid(orderid string) string {
 		return orderid[1:2]
 	}
 	return orderid[:2]
+}
+
+func CheckOrderid(orderid string) (aid string, err error) {
+	if len(orderid) != 32 {
+		return "", errors.New("orderid is not the correct length.")
+	}
+	aid = GetAidFromOrderid(orderid)
+	if len(aid) == 0 {
+		return "", errors.New("orderid's 'aid' section is incorrect.")
+	}
+	return aid, nil
 }
