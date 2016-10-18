@@ -18,11 +18,12 @@ import (
 type (
 	// Order base model
 	BaseOrder struct {
-		Id        string `json:"id" db:"id"`
-		LinkIdAid string `json:"link_id_aid" db:"link_id_aid"`
-		Aid       string `json:"aid" db:"aid"`   //asset id
-		Uid       string `json:"uid" db:"uid"`   //user id
-		Type      string `json:"type" db:"type"` //order type
+		Id      string `json:"id" db:"id"`
+		Aid     string `json:"aid" db:"aid"` //asset id
+		Uid     string `json:"uid" db:"uid"` //user id
+		LinkId  string `json:"link_id" db:"link_id"`
+		LinkUid string `json:"link_uid" db:"link_uid"`
+		Type    string `json:"type" db:"type"` //order type
 		//the amount of change for the Uid-Aid account, balance of positive and negative representation
 		Amount        float64 `json:"amount" db:"amount"`
 		Summary       string  `json:"summary" db:"summary"`
@@ -206,19 +207,8 @@ func (this *BaseOrder) SetTarget(targetStatus int64, ip string) error {
 
 // Binding the order and it's related order.
 func (this *BaseOrder) Link(related *BaseOrder) {
-	this.LinkIdAid, related.LinkIdAid = related.Id+"|"+related.Aid, this.Id+"|"+this.Aid
-}
-
-// Get the related order's 'id' and 'aid'.
-func (this *BaseOrder) SplitLink() (id, aid string) {
-	if len(this.LinkIdAid) == 0 {
-		return "", this.Aid
-	}
-	a := strings.Split(this.LinkIdAid, "|")
-	if len(a) != 2 {
-		return "", ""
-	}
-	return a[0], a[1]
+	this.LinkId, related.LinkId = related.Id, this.Id
+	this.LinkUid, related.LinkUid = related.Uid, this.Uid
 }
 
 // Get details of the json string format.
@@ -259,6 +249,14 @@ func (this *BaseOrder) GetDetails() []*Detail {
 // Get the order's created time.
 func (this *BaseOrder) GetCreatedAt() int64 {
 	return this.CreatedAt
+}
+
+// Get the related order's 'aid'.
+func (this *BaseOrder) GetLinkAid() string {
+	if len(this.LinkId) == 0 {
+		return this.Aid
+	}
+	return GetAidFromOrderid(this.LinkId)
 }
 
 var (
