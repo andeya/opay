@@ -49,5 +49,5 @@ func (t *Transfer) SyncDeal() error {
 	}
 
 	// 更新订单
-	return t.Background.Context.Succeed()
+	return t.Background.Context.SyncDeal()
 }
