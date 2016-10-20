@@ -43,17 +43,15 @@ func CreateOrderid(aid string) string {
 	}
 	salt := orderid.salt
 	orderid.lock.Unlock()
-	return fmt.Sprintf("%s%s%09d%09d", aid, t.Format("060102150405"), t.Nanosecond(), salt)
+	return fmt.Sprintf("%s%09d%09d%s", t.Format("060102150405"), t.Nanosecond(), salt, aid)
 }
 
 func GetAidFromOrderid(orderid string) string {
-	if len(orderid) < 2 {
+	length := len(orderid)
+	if length < 2 {
 		return ""
 	}
-	if strings.HasPrefix(orderid, "0") {
-		return orderid[1:2]
-	}
-	return orderid[:2]
+	return strings.TrimPrefix(orderid[length-2:], "0")
 }
 
 func CheckOrderid(orderid string) (aid string, err error) {
