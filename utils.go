@@ -28,6 +28,7 @@ func checkTimeout(deadline time.Time) (timeout time.Duration, errTimeout error) 
 type Floater struct {
 	numOfDecimalPlaces int
 	accuracy           float64
+	zeroString         string
 	format             string
 }
 
@@ -35,14 +36,21 @@ func NewFloater(numOfDecimalPlaces int) *Floater {
 	if numOfDecimalPlaces < 0 || numOfDecimalPlaces > 14 {
 		panic("the range of Floater.numOfDecimalPlaces must be between 0 and 14.")
 	}
-	var accuracy float64 = 1
-	if numOfDecimalPlaces > 0 {
-		accuracyString := "0." + strings.Repeat("0", numOfDecimalPlaces-1) + "1"
-		accuracy, _ = strconv.ParseFloat(accuracyString, 64)
+	if numOfDecimalPlaces == 0 {
+		return &Floater{
+			numOfDecimalPlaces: 0,
+			accuracy:           0,
+			zeroString:         "0",
+			format:             "%0.0f",
+		}
 	}
+	accuracyString := "0." + strings.Repeat("0", numOfDecimalPlaces-1) + "1"
+	accuracy, _ := strconv.ParseFloat(accuracyString, 64)
+	zeroString := accuracyString[:len(accuracyString)-1] + "0"
 	return &Floater{
 		numOfDecimalPlaces: numOfDecimalPlaces,
 		accuracy:           accuracy,
+		zeroString:         zeroString,
 		format:             "%0." + strconv.Itoa(numOfDecimalPlaces) + "f",
 	}
 }
@@ -85,21 +93,25 @@ func (this *Floater) Atoa(s string, bitSize int) (string, error) {
 }
 
 func (this *Floater) Equal(a, b float64) bool {
-	return math.Abs(a-b) < this.accuracy
+	return this.IsZero(a - b)
 }
 
 func (this *Floater) Greater(a, b float64) bool {
-	return math.Max(a, b) == a && math.Abs(a-b) > this.accuracy
-}
-
-func (this *Floater) Smaller(a, b float64) bool {
-	return math.Max(a, b) == b && math.Abs(a-b) > this.accuracy
+	return math.Max(a, b) == a && !this.IsZero(a-b)
 }
 
 func (this *Floater) GreaterOrEqual(a, b float64) bool {
-	return math.Max(a, b) == a || math.Abs(a-b) < this.accuracy
+	return math.Max(a, b) == a || this.IsZero(a-b)
+}
+
+func (this *Floater) Smaller(a, b float64) bool {
+	return math.Min(a, b) == a && !this.IsZero(a-b)
 }
 
 func (this *Floater) SmallerOrEqual(a, b float64) bool {
-	return math.Max(a, b) == b || math.Abs(a-b) < this.accuracy
+	return math.Min(a, b) == a || this.IsZero(a-b)
+}
+
+func (this *Floater) IsZero(a float64) bool {
+	return this.Ftoa(a) <= this.zeroString
 }

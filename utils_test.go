@@ -65,3 +65,20 @@ func TestAtoa(t *testing.T) {
 	s, err = floater.Atoa(s0, 64)
 	t.Logf("%v:%s %v", floater.Accuracy(), s, err)
 }
+
+func TestZeroString(t *testing.T) {
+	floater := NewFloater(0)
+	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(floater.Accuracy()))
+
+	floater = NewFloater(1)
+	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(0.1))
+	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(0.05))
+
+	floater = NewFloater(14)
+	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(floater.Accuracy()))
+}
+
+func TestCompare(t *testing.T) {
+	floater := NewFloater(1)
+	t.Logf("%v:%v", floater.Accuracy(), floater.Equal(0.1, 0.15))
+}
