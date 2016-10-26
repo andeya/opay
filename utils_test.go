@@ -72,7 +72,7 @@ func TestZeroString(t *testing.T) {
 
 	floater = NewFloater(1)
 	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(0.1))
-	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(0.05))
+	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(0.04))
 
 	floater = NewFloater(14)
 	t.Logf("%v:%v", floater.Accuracy(), floater.IsZero(floater.Accuracy()))
