@@ -58,8 +58,9 @@ func NewBaseOrderFromAid(
 	summary string,
 	targetStatus int64,
 	ip string,
+	note ...string,
 ) (*BaseOrder, error) {
-	return newBaseOrder(meta, CreateOrderid(aid), aid, uid, amount, summary, targetStatus, ip)
+	return newBaseOrder(meta, CreateOrderid(aid), aid, uid, amount, summary, targetStatus, ip, note...)
 }
 
 func NewBaseOrderFromId(
@@ -70,12 +71,13 @@ func NewBaseOrderFromId(
 	summary string,
 	targetStatus int64,
 	ip string,
+	note ...string,
 ) (*BaseOrder, error) {
 	aid, err := CheckOrderid(id)
 	if err != nil {
 		return nil, err
 	}
-	return newBaseOrder(meta, id, aid, uid, amount, summary, targetStatus, ip)
+	return newBaseOrder(meta, id, aid, uid, amount, summary, targetStatus, ip, note...)
 }
 
 func newBaseOrder(
@@ -87,6 +89,7 @@ func newBaseOrder(
 	summary string,
 	targetStatus int64,
 	ip string,
+	note ...string,
 ) (*BaseOrder, error) {
 	if meta == nil {
 		return nil, errors.New("Param meta can not be nil.")
@@ -110,7 +113,7 @@ func newBaseOrder(
 		Details:   []*Detail{},
 		meta:      meta,
 	}
-	err := o.SetTarget(targetStatus, ip)
+	err := o.SetTarget(targetStatus, ip, note...)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +190,7 @@ func (this *BaseOrder) SyncDeal(tx *sqlx.Tx) error {
 }
 
 // Set the target Action.
-func (this *BaseOrder) SetTarget(targetStatus int64, ip string) error {
+func (this *BaseOrder) SetTarget(targetStatus int64, ip string, note ...string) error {
 	if this.Status == targetStatus {
 		return errors.New("Target status and the current status is the same.")
 	}
@@ -196,10 +199,16 @@ func (this *BaseOrder) SetTarget(targetStatus int64, ip string) error {
 	if this.Details == nil {
 		this.Details = []*Detail{}
 	}
+	var _note string
+	if len(note) == 0 {
+		_note = this.meta.Note(this.Status)
+	} else {
+		_note = note[0]
+	}
 	this.Details = append(this.Details, &Detail{
 		UpdatedAt: time.Now().Unix(),
 		Status:    this.Status,
-		Note:      this.meta.Note(this.Status),
+		Note:      _note,
 		Ip:        ip,
 	})
 	return nil
