@@ -113,5 +113,5 @@ func (this *Floater) SmallerOrEqual(a, b float64) bool {
 }
 
 func (this *Floater) IsZero(a float64) bool {
-	return this.Ftoa(a) <= this.zeroString
+	return this.Ftoa(math.Abs(a)) <= this.zeroString
 }

@@ -80,5 +80,5 @@ func TestZeroString(t *testing.T) {
 
 func TestCompare(t *testing.T) {
 	floater := NewFloater(1)
-	t.Logf("%v:%v", floater.Accuracy(), floater.Equal(0.1, 0.15))
+	t.Logf("%v:%v", floater.Accuracy(), floater.Equal(-10, 0.15))
 }
