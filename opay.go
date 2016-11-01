@@ -77,7 +77,7 @@ func (opay *Opay) Serve() {
 			defer func() {
 				r := recover()
 				if r != nil {
-					err = fmt.Errorf("%v", r)
+					err = fmt.Errorf("opay panic: %v", r)
 				}
 
 				// 关闭请求，标记请求处理结束
