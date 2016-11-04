@@ -77,7 +77,7 @@ func (req *Request) prepare(opay *Opay) (respChan <-chan *Response, err error) {
 
 	// 必须设定目标处理行为
 	if req.step == UNSET {
-		err = ErrInvalidOperation
+		err = ErrInvalidStep
 		return
 	}
 
@@ -87,7 +87,7 @@ func (req *Request) prepare(opay *Opay) (respChan <-chan *Response, err error) {
 		curStep == FAIL ||
 		curStep == SUCCEED ||
 		curStep == SYNC_DEAL {
-		err = ErrInvalidOperation
+		err = ErrInvalidStep
 		return
 	}
 
@@ -105,9 +105,9 @@ func (req *Request) prepare(opay *Opay) (respChan <-chan *Response, err error) {
 
 	// 检查从属订单
 	if req.Stakeholder != nil {
-		// 检查主从订单操作是否一致
+		// 检查主从订单类型是否一致
 		if req.Stakeholder.GetMeta() != meta {
-			err = ErrDifferentOperator
+			err = ErrDifferentType
 			return
 		}
 
