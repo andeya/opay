@@ -64,3 +64,12 @@ func CheckOrderid(orderid string) (aid string, err error) {
 	}
 	return aid, nil
 }
+
+func GetTimeFromOrderid(orderid string) time.Time {
+	length := len(orderid)
+	if length < 12 {
+		return time.Time{}
+	}
+	t, _ := time.Parse("060102150405", orderid[:12])
+	return t
+}

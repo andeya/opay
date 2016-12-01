@@ -10,3 +10,7 @@ func TestCreateOrderid(t *testing.T) {
 	t.Log(orderid)
 	t.Log(GetAidFromOrderid(orderid))
 }
+
+func TestGetTimeFromOrderid(t *testing.T) {
+	t.Log(GetTimeFromOrderid("1612011008581826898744368413960e"))
+}
