@@ -41,14 +41,22 @@ func (opay *Opay) Serve() {
 	if err := opay.db.Ping(); err != nil {
 		panic(err)
 	}
+	var maxRoutine = opay.queue.GetCap() / 5
+	if maxRoutine == 0 {
+		maxRoutine = 1
+	}
+	var src = make(chan struct{}, maxRoutine)
 	for {
-		// 读出一条请求
-		// 无限等待
+		// Gets an execute permission
+		src <- struct{}{}
+
+		// Read a request
+		// Unlimited wait
 		req := opay.queue.Pull()
 
 		var err error
 
-		// 获取相应资产类型的账户余额操作函数
+		// Gets the account balance operation function for the corresponding asset type.
 		var (
 			initiatorSettle   SettleFunc
 			stakeholderSettle SettleFunc
@@ -56,7 +64,7 @@ func (opay *Opay) Serve() {
 
 		initiatorSettle, err = opay.GetSettleFunc(req.Initiator.GetAid())
 		if err != nil {
-			// 指定的资产账户的操作接口不存在时返回
+			// Returns if the operation interface of the specified asset account does not exist.
 			req.setError(err)
 			req.writeback()
 			continue
@@ -64,14 +72,14 @@ func (opay *Opay) Serve() {
 		if req.Stakeholder != nil {
 			stakeholderSettle, err = opay.GetSettleFunc(req.Stakeholder.GetAid())
 			if err != nil {
-				// 指定的资产账户的操作接口不存在时返回
+				// Returns if the operation interface of the specified asset account does not exist
 				req.setError(err)
 				req.writeback()
 				continue
 			}
 		}
 
-		// 通过路由执行订单处理
+		// The order processing is performed by routing.
 		go func() {
 			var err error
 			defer func() {
@@ -80,9 +88,11 @@ func (opay *Opay) Serve() {
 					err = fmt.Errorf("opay panic: %v", r)
 				}
 
-				// 关闭请求，标记请求处理结束
+				// Close the request, and mark the end of the request processing
 				req.setError(err)
 				req.writeback()
+				// Frees an execute permission
+				<-src
 			}()
 
 			if req.Tx == nil {

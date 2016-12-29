@@ -34,7 +34,7 @@ func (o *Opay) RegMeta(orderType string, handler Handler, statuses []Status) (*M
 		v = v.Elem()
 	}
 
-	// 过滤不允许的类型
+	// Filters are not allowed
 	if !(v.Kind() == reflect.Struct || v.Kind() == reflect.Func) {
 		return nil, errors.New("opay: handler must be func or struct type.")
 	}
@@ -143,9 +143,9 @@ func (m *Meta) Note(code int64) string {
 	return status.Note
 }
 
-// 执行订单处理
+// Execute order processing
 func (m *Meta) serve(ctx *Context) error {
-	// 若为结构体类型，则创建新实例
+	// If the structure type, then create a new instance
 	if m.handler.Kind() == reflect.Struct {
 		m.handler = reflect.New(m.handler.Type())
 	}

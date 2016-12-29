@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Context is used to process order information.
 type Context struct {
 	initiatorSettle   SettleFunc
 	stakeholderSettle SettleFunc
@@ -12,12 +13,12 @@ type Context struct {
 	*Floater
 }
 
-// 获取处理超时，不填则不限时
+// Deadline gets processing deadline, not limited if not fill.
 func (ctx *Context) Deadline() time.Time {
 	return ctx.Request.Deadline
 }
 
-// 新建订单，并标记为等待处理状态
+// Pend creates an order, and marks it as pending.
 func (ctx *Context) Pend() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.Request.Stakeholder.Pend(ctx.Request.Tx)
@@ -28,7 +29,7 @@ func (ctx *Context) Pend() error {
 	return ctx.Request.Initiator.Pend(ctx.Request.Tx)
 }
 
-// 标记订单为正在处理状态，或有相关异步回调操作
+// Do marks the order as being in progress, and maybe have an associated asynchronous callback operation.
 func (ctx *Context) Do() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.Request.Stakeholder.Do(ctx.Request.Tx)
@@ -39,7 +40,7 @@ func (ctx *Context) Do() error {
 	return ctx.Request.Initiator.Do(ctx.Request.Tx)
 }
 
-// 处理账户并标记订单为成功状态
+// Succeed processes the account and marks the order as successful.
 func (ctx *Context) Succeed() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.Request.Stakeholder.Succeed(ctx.Request.Tx)
@@ -50,7 +51,7 @@ func (ctx *Context) Succeed() error {
 	return ctx.Request.Initiator.Succeed(ctx.Request.Tx)
 }
 
-// 标记订单为撤销状态
+// Cancel marks the order as Canceled.
 func (ctx *Context) Cancel() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.Request.Stakeholder.Cancel(ctx.Request.Tx)
@@ -61,7 +62,7 @@ func (ctx *Context) Cancel() error {
 	return ctx.Request.Initiator.Cancel(ctx.Request.Tx)
 }
 
-// 标记订单为失败状态
+// Fail marks the order as failed.
 func (ctx *Context) Fail() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.Request.Stakeholder.Fail(ctx.Request.Tx)
@@ -72,7 +73,7 @@ func (ctx *Context) Fail() error {
 	return ctx.Request.Initiator.Fail(ctx.Request.Tx)
 }
 
-// 同步处理订单，并标记为成功状态
+// SyncDeal The order is processed synchronously and marked as a successful status.
 func (ctx *Context) SyncDeal() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.Request.Stakeholder.SyncDeal(ctx.Request.Tx)
@@ -87,7 +88,7 @@ func (ctx *Context) HasStakeholder() bool {
 	return ctx.Request.Stakeholder != nil
 }
 
-// 修改账户余额。
+// Modify the account balance.
 func (ctx *Context) UpdateBalance() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.stakeholderSettle(
@@ -106,7 +107,7 @@ func (ctx *Context) UpdateBalance() error {
 	)
 }
 
-// 回滚账户余额。
+// Roll back the account balance.
 func (ctx *Context) RollbackBalance() error {
 	if ctx.Request.Stakeholder != nil {
 		err := ctx.stakeholderSettle(
@@ -126,6 +127,7 @@ func (ctx *Context) RollbackBalance() error {
 	)
 }
 
+// Param returns response value.
 func (ctx *Context) Param(k string) interface{} {
 	return ctx.Request.param(k)
 }

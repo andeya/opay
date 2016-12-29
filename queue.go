@@ -10,6 +10,7 @@ import (
 type (
 	// 订单队列
 	Queue interface {
+		GetCap() int
 		SetCap(int)
 		Push(Request) (respChan <-chan *Response)
 		Pull() Request
@@ -24,7 +25,7 @@ type (
 )
 
 const (
-	DEFAULT_QUEUE_CAP = 1024 //队列默认容量
+	DEFAULT_QUEUE_CAP = 1024 // DEFAULT_QUEUE_CAP is the queue default capacity
 )
 
 func newOrderChan(queueCapacity int, opay *Opay) Queue {
@@ -37,7 +38,14 @@ func newOrderChan(queueCapacity int, opay *Opay) Queue {
 	}
 }
 
-// 设置队列容量
+// GetCap returns queue capacity.
+func (oc *OrderChan) GetCap() int {
+	oc.mu.RLock()
+	defer oc.mu.RUnlock()
+	return cap(oc.c)
+}
+
+// SetCap sets the queue capacity.
 func (oc *OrderChan) SetCap(queueCapacity int) {
 	if queueCapacity <= 0 {
 		queueCapacity = DEFAULT_QUEUE_CAP
@@ -56,7 +64,7 @@ func (oc *OrderChan) SetCap(queueCapacity int) {
 	log.Println("Successfully set the queue capacity.")
 }
 
-// 推送一条订单
+// Push an order
 func (oc *OrderChan) Push(req Request) (respChan <-chan *Response) {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
@@ -71,14 +79,14 @@ func (oc *OrderChan) Push(req Request) (respChan <-chan *Response) {
 	timeout, err := checkTimeout(req.Deadline)
 
 	if err != nil {
-		// 已超时，取消处理
+		// Time out, cancel processing
 		req.setError(err)
 		req.writeback()
 		return
 	}
 
 	if timeout > 0 {
-		// 未超时
+		// Not timed out
 		select {
 		case oc.c <- req:
 		case <-time.After(timeout):
@@ -88,16 +96,16 @@ func (oc *OrderChan) Push(req Request) (respChan <-chan *Response) {
 		}
 
 	} else {
-		// 无超时限制
+		// No timeout limit
 		oc.c <- req
 	}
 
 	return
 }
 
-// 读出一条订单
-// 无限等待，直到取出一个有效订单
-// 超时订单，自动处理
+// Read an order.
+// Wait indefinitely until a valid order is taken.
+// Automatically processes overtime orders.
 func (oc *OrderChan) Pull() Request {
 	var (
 		req Request
@@ -126,6 +134,7 @@ func (oc *OrderChan) Pull() Request {
 	return req
 }
 
+// GetOpay returns Opay
 func (oc *OrderChan) GetOpay() *Opay {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()

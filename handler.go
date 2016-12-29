@@ -1,18 +1,18 @@
 package opay
 
 type (
-	// 订单处理接口
-	// 只允许函数或结构体类型
+	// Handler is order processing interface, only function or structure types are allowed.
 	Handler interface {
 		ServeOpay(*Context) error
 	}
 
-	// 订单处理接口函数
+	// HandlerFunc Order processing interface function
 	HandlerFunc func(*Context) error
 )
 
 var _ Handler = HandlerFunc(nil)
 
+// ServeOpay implements Handler interface.
 func (hf HandlerFunc) ServeOpay(ctx *Context) error {
 	return hf(ctx)
 }

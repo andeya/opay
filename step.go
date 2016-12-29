@@ -5,15 +5,15 @@ type (
 	Step int
 )
 
-// 六种订单处理行为状态
+// Six order processing behavior states
 const (
-	FAIL      Step = UNSET - 2 //处理失败
-	CANCEL    Step = UNSET - 1 //取消订单
-	UNSET     Step = 0         //未设置
-	PEND      Step = UNSET + 1 //等待处理
-	DO        Step = UNSET + 2 //正在处理
-	SUCCEED   Step = UNSET + 3 //处理成功
-	SYNC_DEAL Step = UNSET + 4 //同步处理至成功
+	FAIL      Step = UNSET - 2 //Processing failed
+	CANCEL    Step = UNSET - 1 //Cancel order
+	UNSET     Step = 0         //Not set
+	PEND      Step = UNSET + 1 //Wait for processing
+	DO        Step = UNSET + 2 //Is being processed
+	SUCCEED   Step = UNSET + 3 //Processing success
+	SYNC_DEAL Step = UNSET + 4 //Processing success synchronously
 )
 
 var (
