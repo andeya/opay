@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	// 订单队列
+	// Queue order
 	Queue interface {
 		GetCap() int
 		SetCap(int)
@@ -16,7 +16,7 @@ type (
 		Pull() Request
 		GetOpay() *Opay
 	}
-
+	// OrderChan order chan
 	OrderChan struct {
 		c    chan Request
 		mu   sync.RWMutex
