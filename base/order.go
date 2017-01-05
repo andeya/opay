@@ -160,32 +160,32 @@ func (this *BaseOrder) GetAmount() float64 {
 }
 
 // Async execution, and mark pending.
-func (this *BaseOrder) Pend(tx *sqlx.Tx) error {
+func (this *BaseOrder) Pend(tx *sqlx.Tx, kv opay.KV) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing Pend method).")
 }
 
 // Async execution, and mark the doing.
-func (this *BaseOrder) Do(tx *sqlx.Tx) error {
+func (this *BaseOrder) Do(tx *sqlx.Tx, kv opay.KV) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing Do method).")
 }
 
 // Async execution, and mark the successful.
-func (this *BaseOrder) Succeed(tx *sqlx.Tx) error {
+func (this *BaseOrder) Succeed(tx *sqlx.Tx, kv opay.KV) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing Succeed method).")
 }
 
 // Async execution, and mark canceled.
-func (this *BaseOrder) Cancel(tx *sqlx.Tx) error {
+func (this *BaseOrder) Cancel(tx *sqlx.Tx, kv opay.KV) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing Cancel method).")
 }
 
 // Async execution, and mark failure.
-func (this *BaseOrder) Fail(tx *sqlx.Tx) error {
+func (this *BaseOrder) Fail(tx *sqlx.Tx, kv opay.KV) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing Fail method).")
 }
 
 // Sync execution, and mark the successful.
-func (this *BaseOrder) SyncDeal(tx *sqlx.Tx) error {
+func (this *BaseOrder) SyncDeal(tx *sqlx.Tx, kv opay.KV) error {
 	return errors.New("*BaseOrder does not implement opay.IOrder (missing SyncDeal method).")
 }
 

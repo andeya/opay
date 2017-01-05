@@ -42,7 +42,6 @@ func (req *Request) prepare(opay *Opay) (respChan <-chan *Response, err error) {
 	respChan = (<-chan *Response)(c)
 
 	req.response = &Response{
-		Result:   make(map[string]interface{}),
 		respChan: (chan<- *Response)(c),
 	}
 
@@ -145,15 +144,17 @@ func (req *Request) prepare(opay *Opay) (respChan <-chan *Response, err error) {
 	return
 }
 
-func (req *Request) param(k string) interface{} {
+func (req *Request) get(k string) interface{} {
 	req.lock.RLock()
 	defer req.lock.RUnlock()
 	return req.Addition[k]
 }
 
 // Write response body.
-func (req *Request) write(k string, v interface{}) {
-	req.response.write(k, v)
+func (req *Request) set(k string, v interface{}) {
+	req.lock.Lock()
+	defer req.lock.Unlock()
+	req.Addition[k] = v
 }
 
 // Set response error

@@ -27,21 +27,21 @@ type (
 		GetAmount() float64
 
 		// Async execution, and mark pending.
-		Pend(*sqlx.Tx) error
+		Pend(*sqlx.Tx, KV) error
 
 		// Async execution, and mark the doing.
-		Do(*sqlx.Tx) error
+		Do(*sqlx.Tx, KV) error
 
 		// Async execution, and mark the successful.
-		Succeed(*sqlx.Tx) error
+		Succeed(*sqlx.Tx, KV) error
 
 		// Async execution, and mark canceled.
-		Cancel(*sqlx.Tx) error
+		Cancel(*sqlx.Tx, KV) error
 
 		// Async execution, and mark failure.
-		Fail(*sqlx.Tx) error
+		Fail(*sqlx.Tx, KV) error
 
 		// Sync execution, and mark the successful.
-		SyncDeal(*sqlx.Tx) error
+		SyncDeal(*sqlx.Tx, KV) error
 	}
 )
